@@ -2,11 +2,15 @@ on:
   pull_request:
     types: [closed]
     branches: [ main ]
-name: 🚀 Deploy website on push
+
+name: 🚀 Deploy website on PR merge
+
 jobs:
   web-deploy:
     name: 🎉 Deploy
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true  
+    
     steps:
     - name: 🚚 Get latest code
       uses: actions/checkout@v4
