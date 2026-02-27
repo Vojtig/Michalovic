@@ -19,7 +19,6 @@ jobs:
       uses: SamKirkland/FTP-Deploy-Action@v4.3.6
       with:
         server: 185.102.21.251
-        port: 222
         username: michalovic.endora.site
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftp
