@@ -85,7 +85,7 @@ function App() {
     className: "header"
   }, /*#__PURE__*/React.createElement("h1", {
     className: "title"
-  }, "Rodina Nov\xE1kovi"), /*#__PURE__*/React.createElement("p", {
+  }, "M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
   }, "V\xEDtejte na na\u0161\xED rodinn\xE9 str\xE1nce s u\u017Eite\u010Dn\xFDmi aplikacemi")), /*#__PURE__*/React.createElement("main", {
     className: "main-content"
@@ -211,7 +211,7 @@ function App() {
     onClick: handleAddApp
   }, "P\u0159idat aplikaci")))), /*#__PURE__*/React.createElement("footer", {
     className: "footer"
-  }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " Rodinn\xE1 str\xE1nka Nov\xE1kovi"), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "footer-note"
   }, "Tato str\xE1nka obsahuje ", apps.length, " aplikac\xED")));
 }

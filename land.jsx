@@ -97,7 +97,7 @@ function App() {
   return (
     <div className="App">
       <header className="header">
-        <h1 className="title">Rodina Novákovi</h1>
+        <h1 className="title">Míchalovic</h1>
         <p className="subtitle">Vítejte na naší rodinné stránce s užitečnými aplikacemi</p>
       </header>
 
@@ -208,7 +208,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>© {new Date().getFullYear()} Rodinná stránka Novákovi</p>
+        <p>© {new Date().getFullYear()} Míchalovic</p>
         <p className="footer-note">Tato stránka obsahuje {apps.length} aplikací</p>
       </footer>
     </div>
