@@ -39,4 +39,4 @@ jobs:
         username: michalovic.endora.site
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftp
-        server-dir: /public_html
+        server-dir: public_html/
