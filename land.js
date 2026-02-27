@@ -87,7 +87,7 @@ function App() {
     className: "title"
   }, "M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "V\xEDtejte na na\u0161\xED rodinn\xE9 str\xE1nce s u\u017Eite\u010Dn\xFDmi aplikacemi")), /*#__PURE__*/React.createElement("main", {
+  }, "V\xEDtejte tady je to na\u0161e")), /*#__PURE__*/React.createElement("main", {
     className: "main-content"
   }, /*#__PURE__*/React.createElement("section", {
     className: "category-filter"

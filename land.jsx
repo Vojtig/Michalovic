@@ -98,7 +98,7 @@ function App() {
     <div className="App">
       <header className="header">
         <h1 className="title">Míchalovic</h1>
-        <p className="subtitle">Vítejte na naší rodinné stránce s užitečnými aplikacemi</p>
+        <p className="subtitle">Vítejte tady je to naše</p>
       </header>
 
       <main className="main-content">
