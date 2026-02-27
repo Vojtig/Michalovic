@@ -93,7 +93,7 @@ function App() {
     <div className="App">
       <header className="header">
         <h1 className="title">Míchalovic</h1>
-        <p className="subtitle">Vítejte tady je to naše!</p>
+        <p className="subtitle">Čauko, tady je to naše</p>
       </header>
 
       <main className="main-content">
