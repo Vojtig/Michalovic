@@ -22,3 +22,4 @@ jobs:
         port: 222
         username: michalovic.endora.site
         password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftp
