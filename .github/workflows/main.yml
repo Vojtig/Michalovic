@@ -1,4 +1,7 @@
-on: merge
+on: 
+  pull_request:
+    types: [closed]
+    branches: [ main ]
 name: 🚀 Deploy website on push
 jobs:
   web-deploy:
