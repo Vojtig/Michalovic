@@ -60,8 +60,6 @@ function App() {
     url: '',
     category: 'Ostatní'
   });
-  const categories = ['Vše', 'Organizace', 'Jídlo', 'Finance', 'Zábava', 'Ostatní'];
-  const [selectedCategory, setSelectedCategory] = useState('Vše');
   const handleAddApp = () => {
     if (newApp.name.trim() === '') return;
     const appToAdd = {
@@ -78,7 +76,7 @@ function App() {
       category: 'Ostatní'
     });
   };
-  const filteredApps = selectedCategory === 'Vše' ? apps : apps.filter(app => app.category === selectedCategory);
+  const filteredApps = apps;
   return /*#__PURE__*/React.createElement("div", {
     className: "App"
   }, /*#__PURE__*/React.createElement("header", {
@@ -90,14 +88,6 @@ function App() {
   }, "V\xEDtejte tady je to na\u0161e!")), /*#__PURE__*/React.createElement("main", {
     className: "main-content"
   }, /*#__PURE__*/React.createElement("section", {
-    className: "category-filter"
-  }, /*#__PURE__*/React.createElement("h2", null, "Aplikace podle kategorie"), /*#__PURE__*/React.createElement("div", {
-    className: "categories"
-  }, categories.map(category => /*#__PURE__*/React.createElement("button", {
-    key: category,
-    className: `category-btn ${selectedCategory === category ? 'active' : ''}`,
-    onClick: () => setSelectedCategory(category)
-  }, category)))), /*#__PURE__*/React.createElement("section", {
     className: "apps-grid"
   }, filteredApps.map(app => /*#__PURE__*/React.createElement("div", {
     className: "app-card",

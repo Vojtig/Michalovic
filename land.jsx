@@ -68,9 +68,6 @@ function App() {
     category: 'Ostatní'
   });
 
-  const categories = ['Vše', 'Organizace', 'Jídlo', 'Finance', 'Zábava', 'Ostatní'];
-  const [selectedCategory, setSelectedCategory] = useState('Vše');
-
   const handleAddApp = () => {
     if (newApp.name.trim() === '') return;
     
@@ -90,9 +87,7 @@ function App() {
     });
   };
 
-  const filteredApps = selectedCategory === 'Vše' 
-    ? apps 
-    : apps.filter(app => app.category === selectedCategory);
+  const filteredApps = apps;
 
   return (
     <div className="App">
@@ -102,20 +97,6 @@ function App() {
       </header>
 
       <main className="main-content">
-        <section className="category-filter">
-          <h2>Aplikace podle kategorie</h2>
-          <div className="categories">
-            {categories.map(category => (
-              <button
-                key={category}
-                className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </section>
 
         <section className="apps-grid">
           {filteredApps.map(app => (
