@@ -85,7 +85,7 @@ function App() {
     className: "title"
   }, "M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "\u010Cauko, tady je to na\u0161e")), /*#__PURE__*/React.createElement("main", {
+  }, "\u010Cauko, tohle je na\u0161e rodinn\xE1 str\xE1nka kde najde\u0161 v\u0161echny na\u0161e aplikace")), /*#__PURE__*/React.createElement("main", {
     className: "main-content"
   }, /*#__PURE__*/React.createElement("section", {
     className: "apps-grid"
