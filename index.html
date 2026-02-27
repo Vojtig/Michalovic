@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Basic HTML Page</title>
+    <style>
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 0; line-height: 1.6; }
+        header, footer { background:#f3f4f6; padding:1rem; text-align:center; }
+        main { padding:1.25rem; max-width:900px; margin:0 auto; }
+        nav a { margin:0 .5rem; color:#0366d6; text-decoration:none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2>Getting started</h2>
+        <p>This is a simple starter HTML page. Replace this content with your own.</p>
+        <section>
+            <h3>Features</h3>
+            <ul>
+                <li>Responsive meta tag</li>
+                <li>Accessible structure (header, main, footer)</li>
+                <li>Lightweight styles</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <small>&copy; <span id="year"></span> Your Name</small>
+        <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+    </footer>
+</body>
+</html>
