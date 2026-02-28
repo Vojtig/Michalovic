@@ -40,3 +40,9 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftp
         server-dir: public_html/
+        exclude: |
+          **/.git*
+          **/node_modules/**
+          **/tests/**
+          **/.babelrc
+          **/package*.json

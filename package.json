@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npm run build:src",
+    "build:src": "babel src/ --out-dir src/ --presets @babel/preset-react",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

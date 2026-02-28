@@ -243,9 +243,39 @@ function App() {
     ref: chartRef
   })))), /*#__PURE__*/React.createElement("main", {
     className: "main-content"
-  }), /*#__PURE__*/React.createElement("footer", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "category-filter"
+  }, /*#__PURE__*/React.createElement("h2", null, "Na\u0161e aplikace")), /*#__PURE__*/React.createElement("div", {
+    className: "apps-grid"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "shopping-list.html",
+    style: {
+      textDecoration: 'none',
+      color: 'inherit'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-card",
+    style: {
+      borderTopColor: '#27ae60'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-icon",
+    style: {
+      backgroundColor: '#d5f4e6'
+    }
+  }, "\uD83D\uDED2"), /*#__PURE__*/React.createElement("div", {
+    className: "app-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-name"
+  }, "N\xE1kupn\xED seznam"), /*#__PURE__*/React.createElement("div", {
+    className: "app-description"
+  }, "Spravuj si sv\u016Fj n\xE1kupn\xED seznam s od\u0161krt\xE1vac\xEDmi pol\xED\u010Dky a pravidelnou aktualizac\xED"), /*#__PURE__*/React.createElement("span", {
+    className: "app-category"
+  }, "Produktivita")))))), /*#__PURE__*/React.createElement("footer", {
     className: "footer"
-  }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " M\xEDchalovic")));
+  }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
+    className: "footer-note"
+  }, "Posledn\xED aktualizace: ", new Date().toLocaleDateString('cs-CZ'))));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(/*#__PURE__*/React.createElement(App, null));

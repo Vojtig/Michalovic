@@ -163,10 +163,31 @@ function App() {
       </div>
 
       <main className="main-content">
+        <div className="category-filter">
+          <h2>Naše aplikace</h2>
+        </div>
+
+        <div className="apps-grid">
+          <a href="shopping-list.html" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="app-card" style={{ borderTopColor: '#27ae60' }}>
+              <div className="app-icon" style={{ backgroundColor: '#d5f4e6' }}>
+                🛒
+              </div>
+              <div className="app-info">
+                <div className="app-name">Nákupní seznam</div>
+                <div className="app-description">
+                  Spravuj si svůj nákupní seznam s odškrtávacími políčky a pravidelnou aktualizací
+                </div>
+                <span className="app-category">Produktivita</span>
+              </div>
+            </div>
+          </a>
+        </div>
       </main>
 
       <footer className="footer">
         <p>© {new Date().getFullYear()} Míchalovic</p>
+        <p className="footer-note">Poslední aktualizace: {new Date().toLocaleDateString('cs-CZ')}</p>
       </footer>
     </div>
   );
