@@ -1,90 +1,129 @@
 // App.jsx - Hlavní komponenta (připravené pro in-browser Babel)
-const { useState } = React;
+const { useState, useEffect } = React;
+
+// Mapování WMO weather codes na české popisy
+const getWeatherDescription = (code) => {
+  const weatherMap = {
+    0: { emoji: '☀️', text: 'Jasno' },
+    1: { emoji: '🌤️', text: 'Převážně jasno' },
+    2: { emoji: '⛅', text: 'Polojasno' },
+    3: { emoji: '☁️', text: 'Zataženo' },
+    45: { emoji: '🌫️', text: 'Mlhavo' },
+    48: { emoji: '🌫️', text: 'Mlhavo' },
+    51: { emoji: '🌧️', text: 'Mrholení' },
+    53: { emoji: '🌧️', text: 'Mrholení' },
+    55: { emoji: '🌧️', text: 'Mrholení' },
+    61: { emoji: '🌧️', text: 'Déšť' },
+    63: { emoji: '🌧️', text: 'Déšť' },
+    65: { emoji: '⛈️', text: 'Prudký déšť' },
+    71: { emoji: '❄️', text: 'Sníh' },
+    73: { emoji: '❄️', text: 'Sníh' },
+    75: { emoji: '❄️', text: 'Sníh' },
+    77: { emoji: '❄️', text: 'Sníh' },
+    80: { emoji: '🌧️', text: 'Deštivé přeháňky' },
+    81: { emoji: '🌧️', text: 'Deštivé přeháňky' },
+    82: { emoji: '⛈️', text: 'Prudké přeháňky' },
+    85: { emoji: '❄️', text: 'Sněhové přeháňky' },
+    86: { emoji: '❄️', text: 'Sněhové přeháňky' },
+    95: { emoji: '⛈️', text: 'Bouřka' },
+    96: { emoji: '⛈️', text: 'Bouřka s kroupami' },
+    99: { emoji: '⛈️', text: 'Bouřka s kroupami' },
+  };
+  return weatherMap[code] || { emoji: '🌤️', text: 'Neznámé' };
+};
 
 function App() {
-  const [apps, setApps] = useState([
-    { 
-      id: 1, 
-      name: 'Rodinný Kalendář', 
-      description: 'Sdílený kalendář pro plánování aktivit', 
-      icon: '📅', 
-      color: '#4CAF50',
-      url: '/calendar',
-      category: 'Organizace'
-    },
-    { 
-      id: 2, 
-      name: 'Recepty', 
-      description: 'Rodinná kniha oblíbených receptů', 
-      icon: '🍳', 
-      color: '#FF9800',
-      url: '/recipes',
-      category: 'Jídlo'
-    },
-    { 
-      id: 3, 
-      name: 'Rozpočet', 
-      description: 'Sledování společných výdajů', 
-      icon: '💰', 
-      color: '#2196F3',
-      url: '/budget',
-      category: 'Finance'
-    },
-    { 
-      id: 4, 
-      name: 'Fotogalerie', 
-      description: 'Sdílené rodinné fotografie', 
-      icon: '📸', 
-      color: '#9C27B0',
-      url: '/gallery',
-      category: 'Zábava'
-    },
-    { 
-      id: 5, 
-      name: 'Úkoly', 
-      description: 'Přidělování a sledování domácích prací', 
-      icon: '✅', 
-      color: '#F44336',
-      url: '/tasks',
-      category: 'Organizace'
-    },
-    { 
-      id: 6, 
-      name: 'Nákupní Seznam', 
-      description: 'Společný seznam pro nakupování', 
-      icon: '🛒', 
-      color: '#FFC107',
-      url: '/shopping',
-      category: 'Jídlo'
+  const [apps, setApps] = useState([]);
+  const [weather, setWeather] = useState(null);
+  const [hourlyData, setHourlyData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const chartRef = React.useRef(null);
+  const chartInstance = React.useRef(null);
+
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  // Vykreslení grafu když se změní hourly data
+  useEffect(() => {
+    if (hourlyData && chartRef.current && window.Chart) {
+      // Zničit starý graf pokud existuje
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+
+      const ctx = chartRef.current.getContext('2d');
+      chartInstance.current = new window.Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: hourlyData.times,
+          datasets: [
+            {
+              label: 'Teplota (°C)',
+              data: hourlyData.temperatures,
+              backgroundColor: 'rgba(255, 107, 84, 0.7)',
+              borderColor: '#ff6b54',
+              borderWidth: 1,
+              borderRadius: 4,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#333',
+                font: { size: 12 }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: '#f0f0f0' },
+              ticks: { color: '#666' },
+              title: { display: true, text: 'Teplota (°C)' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#666' }
+            }
+          }
+        }
+      });
     }
-  ]);
+  }, [hourlyData]);
 
-  const [newApp, setNewApp] = useState({
-    name: '',
-    description: '',
-    icon: '📱',
-    color: '#607D8B',
-    url: '',
-    category: 'Ostatní'
-  });
-
-  const handleAddApp = () => {
-    if (newApp.name.trim() === '') return;
-    
-    const appToAdd = {
-      ...newApp,
-      id: apps.length + 1
-    };
-    
-    setApps([...apps, appToAdd]);
-    setNewApp({
-      name: '',
-      description: '',
-      icon: '📱',
-      color: '#607D8B',
-      url: '',
-      category: 'Ostatní'
-    });
+  const fetchWeather = async () => {
+    try {
+      setLoading(true);
+      // Čáslav coordinates: 49.7167°N, 15.4162°E
+      const response = await fetch(
+        'https://api.open-meteo.com/v1/forecast?latitude=49.7167&longitude=15.4162&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m&timezone=Europe/Prague'
+      );
+      const data = await response.json();
+      setWeather(data.current);
+      
+      // Zpracování hourly dat (prvních 24 hodin)
+      if (data.hourly && data.hourly.time && data.hourly.temperature_2m) {
+        const times = data.hourly.time.slice(0, 24).map(time => {
+          const hour = new Date(time).getHours();
+          return `${hour}:00`;
+        });
+        const temperatures = data.hourly.temperature_2m.slice(0, 24);
+        setHourlyData({ times, temperatures });
+      }
+      
+      setError(null);
+    } catch (err) {
+      console.error('Chyba při načítání počasí:', err);
+      setError('Nepodařilo se načíst počasí');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredApps = apps;
@@ -93,104 +132,41 @@ function App() {
     <div className="App">
       <header className="header">
         <h1 className="title">Míchalovic</h1>
-        <p className="subtitle">Čauko, tohle je naše rodinná stránka kde najdeš všechny naše aplikace</p>
+        <p className="subtitle">Čauko, tohle je naše rodinná stránka kde najdeš všechny naše užitečné aplikace</p>
       </header>
 
-      <main className="main-content">
-
-        <section className="apps-grid">
-          {filteredApps.map(app => (
-            <div 
-              className="app-card" 
-              key={app.id}
-              style={{ borderTopColor: app.color }}
-              onClick={() => window.location.href = app.url}
-            >
-              <div className="app-icon" style={{ backgroundColor: app.color }}>
-                {app.icon}
-              </div>
-              <div className="app-info">
-                <h3 className="app-name">{app.name}</h3>
-                <p className="app-description">{app.description}</p>
-                <span className="app-category">{app.category}</span>
-              </div>
+      <div className="weather-section">
+        <h2>Počasí v Čáslavi</h2>
+        {loading && <p>Načítám data...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {weather && (
+          <div className="weather-info">
+            <div className="weather-main">
+              <span className="weather-emoji">{getWeatherDescription(weather.weather_code).emoji}</span>
+              <span className="weather-type">{getWeatherDescription(weather.weather_code).text}</span>
             </div>
-          ))}
-        </section>
-
-        <section className="add-app-section">
-          <h2>Přidat novou aplikaci</h2>
-          <div className="add-app-form">
-            <div className="form-row">
-              <input
-                type="text"
-                placeholder="Název aplikace"
-                value={newApp.name}
-                onChange={(e) => setNewApp({...newApp, name: e.target.value})}
-              />
-              <input
-                type="text"
-                placeholder="Popis"
-                value={newApp.description}
-                onChange={(e) => setNewApp({...newApp, description: e.target.value})}
-              />
+            <div className="weather-details">
+              <p><strong>{weather.temperature_2m}°C</strong></p>
+              <p>Vlhkost: {weather.relative_humidity_2m}%</p>
             </div>
-            <div className="form-row">
-              <input
-                type="text"
-                placeholder="URL adresa"
-                value={newApp.url}
-                onChange={(e) => setNewApp({...newApp, url: e.target.value})}
-              />
-              <select
-                value={newApp.category}
-                onChange={(e) => setNewApp({...newApp, category: e.target.value})}
-              >
-                <option value="Organizace">Organizace</option>
-                <option value="Jídlo">Jídlo</option>
-                <option value="Finance">Finance</option>
-                <option value="Zábava">Zábava</option>
-                <option value="Ostatní">Ostatní</option>
-              </select>
-            </div>
-            <div className="form-row">
-              <div className="color-picker">
-                <label>Barva ikony:</label>
-                <input
-                  type="color"
-                  value={newApp.color}
-                  onChange={(e) => setNewApp({...newApp, color: e.target.value})}
-                />
-              </div>
-              <div className="icon-picker">
-                <label>Ikona:</label>
-                <select
-                  value={newApp.icon}
-                  onChange={(e) => setNewApp({...newApp, icon: e.target.value})}
-                >
-                  <option value="📅">📅 Kalendář</option>
-                  <option value="🍳">🍳 Recepty</option>
-                  <option value="💰">💰 Finance</option>
-                  <option value="📸">📸 Foto</option>
-                  <option value="✅">✅ Úkoly</option>
-                  <option value="🛒">🛒 Nákupy</option>
-                  <option value="📱">📱 Aplikace</option>
-                  <option value="👨‍👩‍👧‍👦">👨‍👩‍👧‍👦 Rodina</option>
-                  <option value="🏠">🏠 Domov</option>
-                  <option value="✈️">✈️ Cestování</option>
-                </select>
-              </div>
-            </div>
-            <button className="add-app-btn" onClick={handleAddApp}>
-              Přidat aplikaci
-            </button>
           </div>
-        </section>
+        )}
+        
+        {hourlyData && (
+          <div className="temperature-chart-container">
+            <h3>Teplotní vývoj na dalších 24h</h3>
+            <div className="chart-wrapper">
+              <canvas ref={chartRef}></canvas>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <main className="main-content">
       </main>
 
       <footer className="footer">
         <p>© {new Date().getFullYear()} Míchalovic</p>
-        <p className="footer-note">Tato stránka obsahuje {apps.length} aplikací</p>
       </footer>
     </div>
   );

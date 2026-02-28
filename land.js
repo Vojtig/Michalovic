@@ -1,80 +1,214 @@
 // App.jsx - Hlavní komponenta (připravené pro in-browser Babel)
 const {
-  useState
+  useState,
+  useEffect
 } = React;
+
+// Mapování WMO weather codes na české popisy
+const getWeatherDescription = code => {
+  const weatherMap = {
+    0: {
+      emoji: '☀️',
+      text: 'Jasno'
+    },
+    1: {
+      emoji: '🌤️',
+      text: 'Převážně jasno'
+    },
+    2: {
+      emoji: '⛅',
+      text: 'Polojasno'
+    },
+    3: {
+      emoji: '☁️',
+      text: 'Zataženo'
+    },
+    45: {
+      emoji: '🌫️',
+      text: 'Mlhavo'
+    },
+    48: {
+      emoji: '🌫️',
+      text: 'Mlhavo'
+    },
+    51: {
+      emoji: '🌧️',
+      text: 'Mrholení'
+    },
+    53: {
+      emoji: '🌧️',
+      text: 'Mrholení'
+    },
+    55: {
+      emoji: '🌧️',
+      text: 'Mrholení'
+    },
+    61: {
+      emoji: '🌧️',
+      text: 'Déšť'
+    },
+    63: {
+      emoji: '🌧️',
+      text: 'Déšť'
+    },
+    65: {
+      emoji: '⛈️',
+      text: 'Prudký déšť'
+    },
+    71: {
+      emoji: '❄️',
+      text: 'Sníh'
+    },
+    73: {
+      emoji: '❄️',
+      text: 'Sníh'
+    },
+    75: {
+      emoji: '❄️',
+      text: 'Sníh'
+    },
+    77: {
+      emoji: '❄️',
+      text: 'Sníh'
+    },
+    80: {
+      emoji: '🌧️',
+      text: 'Deštivé přeháňky'
+    },
+    81: {
+      emoji: '🌧️',
+      text: 'Deštivé přeháňky'
+    },
+    82: {
+      emoji: '⛈️',
+      text: 'Prudké přeháňky'
+    },
+    85: {
+      emoji: '❄️',
+      text: 'Sněhové přeháňky'
+    },
+    86: {
+      emoji: '❄️',
+      text: 'Sněhové přeháňky'
+    },
+    95: {
+      emoji: '⛈️',
+      text: 'Bouřka'
+    },
+    96: {
+      emoji: '⛈️',
+      text: 'Bouřka s kroupami'
+    },
+    99: {
+      emoji: '⛈️',
+      text: 'Bouřka s kroupami'
+    }
+  };
+  return weatherMap[code] || {
+    emoji: '🌤️',
+    text: 'Neznámé'
+  };
+};
 function App() {
-  const [apps, setApps] = useState([{
-    id: 1,
-    name: 'Rodinný Kalendář',
-    description: 'Sdílený kalendář pro plánování aktivit',
-    icon: '📅',
-    color: '#4CAF50',
-    url: '/calendar',
-    category: 'Organizace'
-  }, {
-    id: 2,
-    name: 'Recepty',
-    description: 'Rodinná kniha oblíbených receptů',
-    icon: '🍳',
-    color: '#FF9800',
-    url: '/recipes',
-    category: 'Jídlo'
-  }, {
-    id: 3,
-    name: 'Rozpočet',
-    description: 'Sledování společných výdajů',
-    icon: '💰',
-    color: '#2196F3',
-    url: '/budget',
-    category: 'Finance'
-  }, {
-    id: 4,
-    name: 'Fotogalerie',
-    description: 'Sdílené rodinné fotografie',
-    icon: '📸',
-    color: '#9C27B0',
-    url: '/gallery',
-    category: 'Zábava'
-  }, {
-    id: 5,
-    name: 'Úkoly',
-    description: 'Přidělování a sledování domácích prací',
-    icon: '✅',
-    color: '#F44336',
-    url: '/tasks',
-    category: 'Organizace'
-  }, {
-    id: 6,
-    name: 'Nákupní Seznam',
-    description: 'Společný seznam pro nakupování',
-    icon: '🛒',
-    color: '#FFC107',
-    url: '/shopping',
-    category: 'Jídlo'
-  }]);
-  const [newApp, setNewApp] = useState({
-    name: '',
-    description: '',
-    icon: '📱',
-    color: '#607D8B',
-    url: '',
-    category: 'Ostatní'
-  });
-  const handleAddApp = () => {
-    if (newApp.name.trim() === '') return;
-    const appToAdd = {
-      ...newApp,
-      id: apps.length + 1
-    };
-    setApps([...apps, appToAdd]);
-    setNewApp({
-      name: '',
-      description: '',
-      icon: '📱',
-      color: '#607D8B',
-      url: '',
-      category: 'Ostatní'
-    });
+  const [apps, setApps] = useState([]);
+  const [weather, setWeather] = useState(null);
+  const [hourlyData, setHourlyData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const chartRef = React.useRef(null);
+  const chartInstance = React.useRef(null);
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  // Vykreslení grafu když se změní hourly data
+  useEffect(() => {
+    if (hourlyData && chartRef.current && window.Chart) {
+      // Zničit starý graf pokud existuje
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+      const ctx = chartRef.current.getContext('2d');
+      chartInstance.current = new window.Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: hourlyData.times,
+          datasets: [{
+            label: 'Teplota (°C)',
+            data: hourlyData.temperatures,
+            backgroundColor: 'rgba(255, 107, 84, 0.7)',
+            borderColor: '#ff6b54',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#333',
+                font: {
+                  size: 12
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: {
+                color: '#f0f0f0'
+              },
+              ticks: {
+                color: '#666'
+              },
+              title: {
+                display: true,
+                text: 'Teplota (°C)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#666'
+              }
+            }
+          }
+        }
+      });
+    }
+  }, [hourlyData]);
+  const fetchWeather = async () => {
+    try {
+      setLoading(true);
+      // Čáslav coordinates: 49.7167°N, 15.4162°E
+      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=49.7167&longitude=15.4162&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m&timezone=Europe/Prague');
+      const data = await response.json();
+      setWeather(data.current);
+
+      // Zpracování hourly dat (prvních 24 hodin)
+      if (data.hourly && data.hourly.time && data.hourly.temperature_2m) {
+        const times = data.hourly.time.slice(0, 24).map(time => {
+          const hour = new Date(time).getHours();
+          return `${hour}:00`;
+        });
+        const temperatures = data.hourly.temperature_2m.slice(0, 24);
+        setHourlyData({
+          times,
+          temperatures
+        });
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Chyba při načítání počasí:', err);
+      setError('Nepodařilo se načíst počasí');
+    } finally {
+      setLoading(false);
+    }
   };
   const filteredApps = apps;
   return /*#__PURE__*/React.createElement("div", {
@@ -85,125 +219,33 @@ function App() {
     className: "title"
   }, "M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "\u010Cauko, tohle je na\u0161e rodinn\xE1 str\xE1nka kde najde\u0161 v\u0161echny na\u0161e aplikace")), /*#__PURE__*/React.createElement("main", {
-    className: "main-content"
-  }, /*#__PURE__*/React.createElement("section", {
-    className: "apps-grid"
-  }, filteredApps.map(app => /*#__PURE__*/React.createElement("div", {
-    className: "app-card",
-    key: app.id,
+  }, "\u010Cauko, tohle je na\u0161e rodinn\xE1 str\xE1nka kde najde\u0161 v\u0161echny na\u0161e u\u017Eite\u010Dn\xE9 aplikace")), /*#__PURE__*/React.createElement("div", {
+    className: "weather-section"
+  }, /*#__PURE__*/React.createElement("h2", null, "Po\u010Das\xED v \u010C\xE1slavi"), loading && /*#__PURE__*/React.createElement("p", null, "Na\u010D\xEDt\xE1m data..."), error && /*#__PURE__*/React.createElement("p", {
     style: {
-      borderTopColor: app.color
-    },
-    onClick: () => window.location.href = app.url
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "app-icon",
-    style: {
-      backgroundColor: app.color
+      color: 'red'
     }
-  }, app.icon), /*#__PURE__*/React.createElement("div", {
-    className: "app-info"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "app-name"
-  }, app.name), /*#__PURE__*/React.createElement("p", {
-    className: "app-description"
-  }, app.description), /*#__PURE__*/React.createElement("span", {
-    className: "app-category"
-  }, app.category))))), /*#__PURE__*/React.createElement("section", {
-    className: "add-app-section"
-  }, /*#__PURE__*/React.createElement("h2", null, "P\u0159idat novou aplikaci"), /*#__PURE__*/React.createElement("div", {
-    className: "add-app-form"
+  }, error), weather && /*#__PURE__*/React.createElement("div", {
+    className: "weather-info"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "form-row"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    placeholder: "N\xE1zev aplikace",
-    value: newApp.name,
-    onChange: e => setNewApp({
-      ...newApp,
-      name: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    placeholder: "Popis",
-    value: newApp.description,
-    onChange: e => setNewApp({
-      ...newApp,
-      description: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "form-row"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    placeholder: "URL adresa",
-    value: newApp.url,
-    onChange: e => setNewApp({
-      ...newApp,
-      url: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement("select", {
-    value: newApp.category,
-    onChange: e => setNewApp({
-      ...newApp,
-      category: e.target.value
-    })
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "Organizace"
-  }, "Organizace"), /*#__PURE__*/React.createElement("option", {
-    value: "J\xEDdlo"
-  }, "J\xEDdlo"), /*#__PURE__*/React.createElement("option", {
-    value: "Finance"
-  }, "Finance"), /*#__PURE__*/React.createElement("option", {
-    value: "Z\xE1bava"
-  }, "Z\xE1bava"), /*#__PURE__*/React.createElement("option", {
-    value: "Ostatn\xED"
-  }, "Ostatn\xED"))), /*#__PURE__*/React.createElement("div", {
-    className: "form-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "color-picker"
-  }, /*#__PURE__*/React.createElement("label", null, "Barva ikony:"), /*#__PURE__*/React.createElement("input", {
-    type: "color",
-    value: newApp.color,
-    onChange: e => setNewApp({
-      ...newApp,
-      color: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "icon-picker"
-  }, /*#__PURE__*/React.createElement("label", null, "Ikona:"), /*#__PURE__*/React.createElement("select", {
-    value: newApp.icon,
-    onChange: e => setNewApp({
-      ...newApp,
-      icon: e.target.value
-    })
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "\uD83D\uDCC5"
-  }, "\uD83D\uDCC5 Kalend\xE1\u0159"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83C\uDF73"
-  }, "\uD83C\uDF73 Recepty"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83D\uDCB0"
-  }, "\uD83D\uDCB0 Finance"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83D\uDCF8"
-  }, "\uD83D\uDCF8 Foto"), /*#__PURE__*/React.createElement("option", {
-    value: "\u2705"
-  }, "\u2705 \xDAkoly"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83D\uDED2"
-  }, "\uD83D\uDED2 N\xE1kupy"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83D\uDCF1"
-  }, "\uD83D\uDCF1 Aplikace"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"
-  }, "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66 Rodina"), /*#__PURE__*/React.createElement("option", {
-    value: "\uD83C\uDFE0"
-  }, "\uD83C\uDFE0 Domov"), /*#__PURE__*/React.createElement("option", {
-    value: "\u2708\uFE0F"
-  }, "\u2708\uFE0F Cestov\xE1n\xED")))), /*#__PURE__*/React.createElement("button", {
-    className: "add-app-btn",
-    onClick: handleAddApp
-  }, "P\u0159idat aplikaci")))), /*#__PURE__*/React.createElement("footer", {
+    className: "weather-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "weather-emoji"
+  }, getWeatherDescription(weather.weather_code).emoji), /*#__PURE__*/React.createElement("span", {
+    className: "weather-type"
+  }, getWeatherDescription(weather.weather_code).text)), /*#__PURE__*/React.createElement("div", {
+    className: "weather-details"
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, weather.temperature_2m, "\xB0C")), /*#__PURE__*/React.createElement("p", null, "Vlhkost: ", weather.relative_humidity_2m, "%"))), hourlyData && /*#__PURE__*/React.createElement("div", {
+    className: "temperature-chart-container"
+  }, /*#__PURE__*/React.createElement("h3", null, "Teplotn\xED v\xFDvoj na dal\u0161\xEDch 24h"), /*#__PURE__*/React.createElement("div", {
+    className: "chart-wrapper"
+  }, /*#__PURE__*/React.createElement("canvas", {
+    ref: chartRef
+  })))), /*#__PURE__*/React.createElement("main", {
+    className: "main-content"
+  }), /*#__PURE__*/React.createElement("footer", {
     className: "footer"
-  }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
-    className: "footer-note"
-  }, "Tato str\xE1nka obsahuje ", apps.length, " aplikac\xED")));
+  }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " M\xEDchalovic")));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(/*#__PURE__*/React.createElement(App, null));
