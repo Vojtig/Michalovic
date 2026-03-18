@@ -185,8 +185,8 @@ function App() {
   const fetchWeather = async () => {
     try {
       setLoading(true);
-      // Čáslav coordinates: 49.7167°N, 15.4162°E
-      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=49.7167&longitude=15.4162&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m&timezone=Europe/Prague');
+      // Čáslav coordinates: 49.914586°N, 15.388698°E
+      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=49.914586&longitude=15.388698&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m&timezone=Europe/Prague');
       const data = await response.json();
       setWeather(data.current);
 
