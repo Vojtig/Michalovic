@@ -1,0 +1,348 @@
+const {
+  useState,
+  useEffect
+} = React;
+const UNITS = ['ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
+function ListonicApp() {
+  const [lists, setLists] = useState(() => {
+    try {
+      const saved = localStorage.getItem('listonicLists');
+      return saved ? JSON.parse(saved) : [{
+        id: 1,
+        name: 'Nákup',
+        items: []
+      }];
+    } catch {
+      return [{
+        id: 1,
+        name: 'Nákup',
+        items: []
+      }];
+    }
+  });
+  const [activeListId, setActiveListId] = useState(null);
+  const [history, setHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('listonicHistory');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newListName, setNewListName] = useState('');
+  const [showAddList, setShowAddList] = useState(false);
+  const [editingListId, setEditingListId] = useState(null);
+  const [editingListName, setEditingListName] = useState('');
+  const [itemInput, setItemInput] = useState('');
+  const [itemQty, setItemQty] = useState('');
+  const [itemUnit, setItemUnit] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  useEffect(() => {
+    localStorage.setItem('listonicLists', JSON.stringify(lists));
+  }, [lists]);
+  useEffect(() => {
+    localStorage.setItem('listonicHistory', JSON.stringify(history));
+  }, [history]);
+  const activeList = activeListId ? lists.find(l => l.id === activeListId) : null;
+  const getSuggestions = () => {
+    if (!itemInput.trim()) return history.slice(0, 6);
+    return history.filter(h => h.toLowerCase().includes(itemInput.toLowerCase())).slice(0, 6);
+  };
+  const addItem = (name = null) => {
+    const itemName = (name || itemInput).trim();
+    if (!itemName) return;
+    const newItem = {
+      id: Date.now(),
+      name: itemName,
+      qty: itemQty.trim(),
+      unit: itemUnit,
+      checked: false
+    };
+    setLists(lists.map(l => l.id === activeListId ? {
+      ...l,
+      items: [...l.items, newItem]
+    } : l));
+    if (!history.includes(itemName)) setHistory([itemName, ...history].slice(0, 50));
+    setItemInput('');
+    setItemQty('');
+    setItemUnit('');
+    setShowSuggestions(false);
+  };
+  const toggleItem = itemId => {
+    setLists(lists.map(l => l.id === activeListId ? {
+      ...l,
+      items: l.items.map(i => i.id === itemId ? {
+        ...i,
+        checked: !i.checked
+      } : i)
+    } : l));
+  };
+  const deleteItem = itemId => {
+    setLists(lists.map(l => l.id === activeListId ? {
+      ...l,
+      items: l.items.filter(i => i.id !== itemId)
+    } : l));
+  };
+  const clearChecked = () => {
+    setLists(lists.map(l => l.id === activeListId ? {
+      ...l,
+      items: l.items.filter(i => !i.checked)
+    } : l));
+  };
+  const addList = () => {
+    if (!newListName.trim()) return;
+    const newList = {
+      id: Date.now(),
+      name: newListName.trim(),
+      items: []
+    };
+    setLists([...lists, newList]);
+    setNewListName('');
+    setShowAddList(false);
+    setActiveListId(newList.id);
+  };
+  const deleteList = listId => {
+    setLists(lists.filter(l => l.id !== listId));
+    if (activeListId === listId) setActiveListId(null);
+  };
+  const saveEditList = () => {
+    if (!editingListName.trim()) return;
+    setLists(lists.map(l => l.id === editingListId ? {
+      ...l,
+      name: editingListName.trim()
+    } : l));
+    setEditingListId(null);
+    setEditingListName('');
+  };
+
+  // --- HOME SCREEN ---
+  if (!activeList) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "lt-app"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "lt-header"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: "index.html",
+      className: "lt-back"
+    }, "\u2190"), /*#__PURE__*/React.createElement("span", {
+      className: "lt-header-title"
+    }, "Moje seznamy"), /*#__PURE__*/React.createElement("button", {
+      className: "lt-header-action",
+      onClick: () => setShowAddList(true)
+    }, "+")), /*#__PURE__*/React.createElement("div", {
+      className: "lt-home"
+    }, showAddList && /*#__PURE__*/React.createElement("div", {
+      className: "lt-new-list-form"
+    }, /*#__PURE__*/React.createElement("input", {
+      autoFocus: true,
+      type: "text",
+      placeholder: "N\xE1zev nov\xE9ho seznamu...",
+      value: newListName,
+      onChange: e => setNewListName(e.target.value),
+      onKeyPress: e => e.key === 'Enter' && addList(),
+      className: "lt-input"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "lt-form-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: addList,
+      className: "lt-btn-primary"
+    }, "Vytvo\u0159it"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        setShowAddList(false);
+        setNewListName('');
+      },
+      className: "lt-btn-ghost"
+    }, "Zru\u0161it"))), lists.length === 0 && !showAddList && /*#__PURE__*/React.createElement("div", {
+      className: "lt-empty-home"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "lt-empty-icon"
+    }, "\uD83D\uDED2"), /*#__PURE__*/React.createElement("p", {
+      className: "lt-empty-title"
+    }, "\u017D\xE1dn\xE9 seznamy"), /*#__PURE__*/React.createElement("p", {
+      className: "lt-empty-sub"
+    }, "Vytvo\u0159 si prvn\xED n\xE1kupn\xED seznam"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setShowAddList(true),
+      className: "lt-btn-primary"
+    }, "Nov\xFD seznam")), /*#__PURE__*/React.createElement("div", {
+      className: "lt-lists-grid"
+    }, lists.map(list => {
+      const total = list.items.length;
+      const done = list.items.filter(i => i.checked).length;
+      const pct = total > 0 ? Math.round(done / total * 100) : 0;
+      const remaining = total - done;
+      return /*#__PURE__*/React.createElement("div", {
+        key: list.id,
+        className: "lt-list-card",
+        onClick: () => setActiveListId(list.id)
+      }, editingListId === list.id ? /*#__PURE__*/React.createElement("div", {
+        className: "lt-edit-list",
+        onClick: e => e.stopPropagation()
+      }, /*#__PURE__*/React.createElement("input", {
+        autoFocus: true,
+        type: "text",
+        value: editingListName,
+        onChange: e => setEditingListName(e.target.value),
+        onKeyPress: e => e.key === 'Enter' && saveEditList(),
+        className: "lt-input lt-edit-input"
+      }), /*#__PURE__*/React.createElement("button", {
+        onClick: saveEditList,
+        className: "lt-btn-primary lt-btn-sm"
+      }, "OK")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        className: "lt-list-card-top"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "lt-list-icon"
+      }, "\uD83D\uDED2"), /*#__PURE__*/React.createElement("div", {
+        className: "lt-list-card-actions"
+      }, /*#__PURE__*/React.createElement("button", {
+        className: "lt-icon-btn",
+        onClick: e => {
+          e.stopPropagation();
+          setEditingListId(list.id);
+          setEditingListName(list.name);
+        }
+      }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("button", {
+        className: "lt-icon-btn",
+        onClick: e => {
+          e.stopPropagation();
+          deleteList(list.id);
+        }
+      }, "\uD83D\uDDD1\uFE0F"))), /*#__PURE__*/React.createElement("div", {
+        className: "lt-list-card-name"
+      }, list.name), /*#__PURE__*/React.createElement("div", {
+        className: "lt-list-card-meta"
+      }, total === 0 ? 'Prázdný seznam' : remaining === 0 ? 'Vše nakoupeno!' : `${remaining} zbývá`), total > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        className: "lt-progress-bar"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "lt-progress-fill",
+        style: {
+          width: `${pct}%`
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "lt-progress-label"
+      }, pct, "%"))));
+    }))));
+  }
+
+  // --- LIST DETAIL SCREEN ---
+  const unchecked = activeList.items.filter(i => !i.checked);
+  const checked = activeList.items.filter(i => i.checked);
+  const suggestions = getSuggestions();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lt-app"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lt-header"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lt-back",
+    onClick: () => setActiveListId(null)
+  }, "\u2190"), /*#__PURE__*/React.createElement("span", {
+    className: "lt-header-title"
+  }, activeList.name), checked.length > 0 && /*#__PURE__*/React.createElement("button", {
+    className: "lt-header-action lt-clear-btn",
+    onClick: clearChecked,
+    title: "Smazat nakoupen\xE9"
+  }, "\uD83D\uDDD1\uFE0F")), /*#__PURE__*/React.createElement("div", {
+    className: "lt-detail"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lt-add-form"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lt-add-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lt-input-wrap"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "P\u0159idat polo\u017Eku...",
+    value: itemInput,
+    onChange: e => {
+      setItemInput(e.target.value);
+      setShowSuggestions(true);
+    },
+    onFocus: () => setShowSuggestions(true),
+    onBlur: () => setTimeout(() => setShowSuggestions(false), 150),
+    onKeyPress: e => e.key === 'Enter' && addItem(),
+    className: "lt-input lt-item-input"
+  }), showSuggestions && suggestions.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "lt-suggestions"
+  }, suggestions.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "lt-suggestion",
+    onMouseDown: () => addItem(s)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lt-suggestion-icon"
+  }, "\uD83D\uDD50"), " ", s)))), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Mno\u017E.",
+    value: itemQty,
+    onChange: e => setItemQty(e.target.value),
+    onKeyPress: e => e.key === 'Enter' && addItem(),
+    className: "lt-input lt-qty-input"
+  }), /*#__PURE__*/React.createElement("select", {
+    value: itemUnit,
+    onChange: e => setItemUnit(e.target.value),
+    className: "lt-unit-select"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "\u2014"), UNITS.map(u => /*#__PURE__*/React.createElement("option", {
+    key: u,
+    value: u
+  }, u))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => addItem(),
+    className: "lt-add-btn"
+  }, "P\u0159idat"))), activeList.items.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "lt-stats-bar"
+  }, /*#__PURE__*/React.createElement("span", null, unchecked.length, " zb\xFDv\xE1"), /*#__PURE__*/React.createElement("div", {
+    className: "lt-progress-bar lt-stats-progress"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lt-progress-fill",
+    style: {
+      width: `${activeList.items.length > 0 ? checked.length / activeList.items.length * 100 : 0}%`
+    }
+  })), /*#__PURE__*/React.createElement("span", null, checked.length, "/", activeList.items.length)), /*#__PURE__*/React.createElement("div", {
+    className: "lt-items"
+  }, unchecked.map(item => /*#__PURE__*/React.createElement("div", {
+    key: item.id,
+    className: "lt-item"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lt-check-btn",
+    onClick: () => toggleItem(item.id)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lt-check-circle"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lt-item-body"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lt-item-name"
+  }, item.name), (item.qty || item.unit) && /*#__PURE__*/React.createElement("span", {
+    className: "lt-item-qty"
+  }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
+    className: "lt-delete-btn",
+    onClick: () => deleteItem(item.id)
+  }, "\u2715"))), checked.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "lt-section-divider"
+  }, /*#__PURE__*/React.createElement("span", null, "Nakoupeno (", checked.length, ")")), checked.map(item => /*#__PURE__*/React.createElement("div", {
+    key: item.id,
+    className: "lt-item lt-item-done"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lt-check-btn lt-check-done",
+    onClick: () => toggleItem(item.id)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lt-check-circle"
+  }, "\u2713")), /*#__PURE__*/React.createElement("div", {
+    className: "lt-item-body"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lt-item-name"
+  }, item.name), (item.qty || item.unit) && /*#__PURE__*/React.createElement("span", {
+    className: "lt-item-qty"
+  }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
+    className: "lt-delete-btn",
+    onClick: () => deleteItem(item.id)
+  }, "\u2715")))), activeList.items.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "lt-empty-list"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lt-empty-icon"
+  }, "\uD83D\uDED2"), /*#__PURE__*/React.createElement("p", {
+    className: "lt-empty-title"
+  }, "Pr\xE1zdn\xFD seznam"), /*#__PURE__*/React.createElement("p", {
+    className: "lt-empty-sub"
+  }, "P\u0159idej prvn\xED polo\u017Eku v\xFD\u0161e")))));
+}
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(/*#__PURE__*/React.createElement(ListonicApp, null));

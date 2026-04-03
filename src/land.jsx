@@ -168,15 +168,15 @@ function App() {
         </div>
 
         <div className="apps-grid">
-          <a href="shopping-list.html" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div className="app-card" style={{ borderTopColor: '#27ae60' }}>
-              <div className="app-icon" style={{ backgroundColor: '#d5f4e6' }}>
+          <a href="listonic.html" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="app-card" style={{ borderTopColor: '#43a047' }}>
+              <div className="app-icon" style={{ backgroundColor: '#e8f5e9' }}>
                 🛒
               </div>
               <div className="app-info">
-                <div className="app-name">Nákupní seznam</div>
+                <div className="app-name">Listonic</div>
                 <div className="app-description">
-                  Spravuj si svůj nákupní seznam s odškrtávacími políčky a pravidelnou aktualizací
+                  Nákupní seznamy jako Listonic — více seznamů, množství, jednotky a chytré návrhy
                 </div>
                 <span className="app-category">Produktivita</span>
               </div>

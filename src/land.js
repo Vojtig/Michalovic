@@ -248,7 +248,7 @@ function App() {
   }, /*#__PURE__*/React.createElement("h2", null, "Na\u0161e aplikace")), /*#__PURE__*/React.createElement("div", {
     className: "apps-grid"
   }, /*#__PURE__*/React.createElement("a", {
-    href: "shopping-list.html",
+    href: "listonic.html",
     style: {
       textDecoration: 'none',
       color: 'inherit'
@@ -256,20 +256,20 @@ function App() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "app-card",
     style: {
-      borderTopColor: '#27ae60'
+      borderTopColor: '#43a047'
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "app-icon",
     style: {
-      backgroundColor: '#d5f4e6'
+      backgroundColor: '#e8f5e9'
     }
   }, "\uD83D\uDED2"), /*#__PURE__*/React.createElement("div", {
     className: "app-info"
   }, /*#__PURE__*/React.createElement("div", {
     className: "app-name"
-  }, "N\xE1kupn\xED seznam"), /*#__PURE__*/React.createElement("div", {
+  }, "Listonic"), /*#__PURE__*/React.createElement("div", {
     className: "app-description"
-  }, "Spravuj si sv\u016Fj n\xE1kupn\xED seznam s od\u0161krt\xE1vac\xEDmi pol\xED\u010Dky a pravidelnou aktualizac\xED"), /*#__PURE__*/React.createElement("span", {
+  }, "N\xE1kupn\xED seznamy jako Listonic \u2014 v\xEDce seznam\u016F, mno\u017Estv\xED, jednotky a chytr\xE9 n\xE1vrhy"), /*#__PURE__*/React.createElement("span", {
     className: "app-category"
   }, "Produktivita")))))), /*#__PURE__*/React.createElement("footer", {
     className: "footer"
