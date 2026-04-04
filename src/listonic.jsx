@@ -1,13 +1,30 @@
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 
 const UNITS = ['ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAcf773krf0tRuGumoavVTPp3AZQ0G4K3Q",
+  authDomain: "michalovic-lists.firebaseapp.com",
+  databaseURL: "https://michalovic-lists-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "michalovic-lists",
+  storageBucket: "michalovic-lists.firebasestorage.app",
+  messagingSenderId: "714903976555",
+  appId: "1:714903976555:web:a97c76ac2b79d767158f2e"
+};
+
+const DB_PATH = 'mic-9kX4mW2pR7vL8j/lists';
+
+const firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+const DEFAULT_LISTS = [{ id: 1, name: 'Nákup', items: [] }];
 
 function ListonicApp() {
   const [lists, setLists] = useState(() => {
     try {
       const saved = localStorage.getItem('listonicLists');
-      return saved ? JSON.parse(saved) : [{ id: 1, name: 'Nákup', items: [] }];
-    } catch { return [{ id: 1, name: 'Nákup', items: [] }]; }
+      return saved ? JSON.parse(saved) : DEFAULT_LISTS;
+    } catch { return DEFAULT_LISTS; }
   });
   const [activeListId, setActiveListId] = useState(null);
   const [history, setHistory] = useState(() => {
@@ -24,9 +41,42 @@ function ListonicApp() {
   const [itemQty, setItemQty] = useState('');
   const [itemUnit, setItemUnit] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('loading'); // loading | ok | saving | offline
 
+  const remoteUpdate = useRef(false);
+  const initialized = useRef(false);
+
+  // Firebase real-time listener
   useEffect(() => {
+    const ref = db.ref(DB_PATH);
+    const handler = ref.on('value', snapshot => {
+      const data = snapshot.val();
+      if (data && Array.isArray(data)) {
+        remoteUpdate.current = true;
+        setLists(data);
+        localStorage.setItem('listonicLists', JSON.stringify(data));
+      }
+      setSyncStatus('ok');
+      initialized.current = true;
+    }, () => {
+      setSyncStatus('offline');
+      initialized.current = true;
+    });
+    return () => ref.off('value', handler);
+  }, []);
+
+  // Write to Firebase when lists change (skip if change came from Firebase)
+  useEffect(() => {
+    if (!initialized.current) return;
+    if (remoteUpdate.current) {
+      remoteUpdate.current = false;
+      return;
+    }
+    setSyncStatus('saving');
     localStorage.setItem('listonicLists', JSON.stringify(lists));
+    db.ref(DB_PATH).set(lists)
+      .then(() => setSyncStatus('ok'))
+      .catch(() => setSyncStatus('offline'));
   }, [lists]);
 
   useEffect(() => {
@@ -84,6 +134,9 @@ function ListonicApp() {
     setEditingListId(null); setEditingListName('');
   };
 
+  const syncLabel = { loading: '⏳ Načítám...', ok: '✓ Synchronizováno', saving: '↑ Ukládám...', offline: '⚠ Offline' };
+  const syncColor = { loading: '#999', ok: '#43a047', saving: '#fb8c00', offline: '#e53935' };
+
   // --- HOME SCREEN ---
   if (!activeList) {
     return (
@@ -91,6 +144,7 @@ function ListonicApp() {
         <div className="lt-header">
           <a href="index.html" className="lt-back">&#8592;</a>
           <span className="lt-header-title">Moje seznamy</span>
+          <span className="lt-sync-badge" style={{ color: syncColor[syncStatus] }}>{syncLabel[syncStatus]}</span>
           <button className="lt-header-action" onClick={() => setShowAddList(true)}>&#43;</button>
         </div>
 
@@ -184,6 +238,7 @@ function ListonicApp() {
       <div className="lt-header">
         <button className="lt-back" onClick={() => setActiveListId(null)}>&#8592;</button>
         <span className="lt-header-title">{activeList.name}</span>
+        <span className="lt-sync-badge" style={{ color: syncColor[syncStatus] }}>{syncLabel[syncStatus]}</span>
         {checked.length > 0 && (
           <button className="lt-header-action lt-clear-btn" onClick={clearChecked} title="Smazat nakoupené">🗑️</button>
         )}

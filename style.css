@@ -614,6 +614,13 @@ body {
 .lt-header-action:hover { background: rgba(255,255,255,0.35); }
 .lt-clear-btn { font-size: 1.1rem; }
 
+.lt-sync-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
 /* Home */
 .lt-home {
   padding: 24px 16px;
