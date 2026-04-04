@@ -34,7 +34,6 @@ function ListonicApp() {
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
 
-  // Načtení dat z API při startu
   useEffect(() => {
     fetch(API_URL, { headers: { 'X-Token': API_TOKEN } })
       .then(r => r.json())
@@ -52,7 +51,6 @@ function ListonicApp() {
       });
   }, []);
 
-  // Uložení do API při každé změně seznamů (debounce 800ms)
   useEffect(() => {
     if (!isMounted.current) return;
     localStorage.setItem('listonicLists', JSON.stringify(lists));
@@ -75,54 +73,15 @@ function ListonicApp() {
 
   const activeList = activeListId ? lists.find(l => l.id === activeListId) : null;
 
-  const getSuggestions = () => {
-    if (!itemInput.trim()) return history.slice(0, 6);
-    return history.filter(h => h.toLowerCase().includes(itemInput.toLowerCase())).slice(0, 6);
-  };
-
   const addItem = (name = null) => {
     const itemName = (name || itemInput).trim();
     if (!itemName) return;
-    const newItem = { id: Date.now(), name: itemName, qty: itemQty.trim(), unit: itemUnit, checked: false };
-    setLists(lists.map(l => l.id === activeListId ? { ...l, items: [...l.items, newItem] } : l));
-    if (!history.includes(itemName)) setHistory([itemName, ...history].slice(0, 50));
+    setLists(addItemToList(lists, activeListId, itemName, itemQty, itemUnit));
+    setHistory(addToHistory(history, itemName));
     setItemInput(''); setItemQty(''); setItemUnit(''); setShowSuggestions(false);
   };
 
-  const toggleItem = (itemId) => {
-    setLists(lists.map(l => l.id === activeListId
-      ? { ...l, items: l.items.map(i => i.id === itemId ? { ...i, checked: !i.checked } : i) }
-      : l));
-  };
-
-  const deleteItem = (itemId) => {
-    setLists(lists.map(l => l.id === activeListId
-      ? { ...l, items: l.items.filter(i => i.id !== itemId) }
-      : l));
-  };
-
-  const clearChecked = () => {
-    setLists(lists.map(l => l.id === activeListId ? { ...l, items: l.items.filter(i => !i.checked) } : l));
-  };
-
-  const addList = () => {
-    if (!newListName.trim()) return;
-    const newList = { id: Date.now(), name: newListName.trim(), items: [] };
-    setLists([...lists, newList]);
-    setNewListName(''); setShowAddList(false);
-    setActiveListId(newList.id);
-  };
-
-  const deleteList = (listId) => {
-    setLists(lists.filter(l => l.id !== listId));
-    if (activeListId === listId) setActiveListId(null);
-  };
-
-  const saveEditList = () => {
-    if (!editingListName.trim()) return;
-    setLists(lists.map(l => l.id === editingListId ? { ...l, name: editingListName.trim() } : l));
-    setEditingListId(null); setEditingListName('');
-  };
+  const suggestions = getSuggestions(history, itemInput);
 
   const syncLabel = { loading: '⏳ Načítám...', ok: '✓ Synchronizováno', saving: '↑ Ukládám...', offline: '⚠ Offline' };
   const syncColor = { loading: '#999', ok: '#43a047', saving: '#fb8c00', offline: '#e53935' };
@@ -147,11 +106,23 @@ function ListonicApp() {
                 placeholder="Název nového seznamu..."
                 value={newListName}
                 onChange={e => setNewListName(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && addList()}
+                onKeyPress={e => e.key === 'Enter' && (() => {
+                  if (!newListName.trim()) return;
+                  const { lists: newLists, newList } = createList(lists, newListName);
+                  setLists(newLists);
+                  setNewListName(''); setShowAddList(false);
+                  setActiveListId(newList.id);
+                })()}
                 className="lt-input"
               />
               <div className="lt-form-actions">
-                <button onClick={addList} className="lt-btn-primary">Vytvořit</button>
+                <button onClick={() => {
+                  if (!newListName.trim()) return;
+                  const { lists: newLists, newList } = createList(lists, newListName);
+                  setLists(newLists);
+                  setNewListName(''); setShowAddList(false);
+                  setActiveListId(newList.id);
+                }} className="lt-btn-primary">Vytvořit</button>
                 <button onClick={() => { setShowAddList(false); setNewListName(''); }} className="lt-btn-ghost">Zrušit</button>
               </div>
             </div>
@@ -181,10 +152,18 @@ function ListonicApp() {
                         type="text"
                         value={editingListName}
                         onChange={e => setEditingListName(e.target.value)}
-                        onKeyPress={e => e.key === 'Enter' && saveEditList()}
+                        onKeyPress={e => e.key === 'Enter' && (() => {
+                          if (!editingListName.trim()) return;
+                          setLists(renameList(lists, editingListId, editingListName));
+                          setEditingListId(null); setEditingListName('');
+                        })()}
                         className="lt-input lt-edit-input"
                       />
-                      <button onClick={saveEditList} className="lt-btn-primary lt-btn-sm">OK</button>
+                      <button onClick={() => {
+                        if (!editingListName.trim()) return;
+                        setLists(renameList(lists, editingListId, editingListName));
+                        setEditingListId(null); setEditingListName('');
+                      }} className="lt-btn-primary lt-btn-sm">OK</button>
                     </div>
                   ) : (
                     <>
@@ -192,7 +171,7 @@ function ListonicApp() {
                         <span className="lt-list-icon">🛒</span>
                         <div className="lt-list-card-actions">
                           <button className="lt-icon-btn" onClick={e => { e.stopPropagation(); setEditingListId(list.id); setEditingListName(list.name); }}>✏️</button>
-                          <button className="lt-icon-btn" onClick={e => { e.stopPropagation(); deleteList(list.id); }}>🗑️</button>
+                          <button className="lt-icon-btn" onClick={e => { e.stopPropagation(); setLists(removeList(lists, list.id)); if (activeListId === list.id) setActiveListId(null); }}>🗑️</button>
                         </div>
                       </div>
                       <div className="lt-list-card-name">{list.name}</div>
@@ -221,7 +200,6 @@ function ListonicApp() {
   // --- LIST DETAIL SCREEN ---
   const unchecked = activeList.items.filter(i => !i.checked);
   const checked = activeList.items.filter(i => i.checked);
-  const suggestions = getSuggestions();
 
   return (
     <div className="lt-app">
@@ -230,7 +208,7 @@ function ListonicApp() {
         <span className="lt-header-title">{activeList.name}</span>
         <span className="lt-sync-badge" style={{ color: syncColor[syncStatus] }}>{syncLabel[syncStatus]}</span>
         {checked.length > 0 && (
-          <button className="lt-header-action lt-clear-btn" onClick={clearChecked} title="Smazat nakoupené">🗑️</button>
+          <button className="lt-header-action lt-clear-btn" onClick={() => setLists(clearCheckedFromList(lists, activeListId))} title="Smazat nakoupené">🗑️</button>
         )}
       </div>
 
@@ -287,7 +265,7 @@ function ListonicApp() {
         <div className="lt-items">
           {unchecked.map(item => (
             <div key={item.id} className="lt-item">
-              <button className="lt-check-btn" onClick={() => toggleItem(item.id)}>
+              <button className="lt-check-btn" onClick={() => setLists(toggleItemInList(lists, activeListId, item.id))}>
                 <span className="lt-check-circle"></span>
               </button>
               <div className="lt-item-body">
@@ -296,7 +274,7 @@ function ListonicApp() {
                   <span className="lt-item-qty">{item.qty} {item.unit}</span>
                 )}
               </div>
-              <button className="lt-delete-btn" onClick={() => deleteItem(item.id)}>&#x2715;</button>
+              <button className="lt-delete-btn" onClick={() => setLists(deleteItemFromList(lists, activeListId, item.id))}>&#x2715;</button>
             </div>
           ))}
 
@@ -307,7 +285,7 @@ function ListonicApp() {
               </div>
               {checked.map(item => (
                 <div key={item.id} className="lt-item lt-item-done">
-                  <button className="lt-check-btn lt-check-done" onClick={() => toggleItem(item.id)}>
+                  <button className="lt-check-btn lt-check-done" onClick={() => setLists(toggleItemInList(lists, activeListId, item.id))}>
                     <span className="lt-check-circle">&#10003;</span>
                   </button>
                   <div className="lt-item-body">
@@ -316,7 +294,7 @@ function ListonicApp() {
                       <span className="lt-item-qty">{item.qty} {item.unit}</span>
                     )}
                   </div>
-                  <button className="lt-delete-btn" onClick={() => deleteItem(item.id)}>&#x2715;</button>
+                  <button className="lt-delete-btn" onClick={() => setLists(deleteItemFromList(lists, activeListId, item.id))}>&#x2715;</button>
                 </div>
               ))}
             </>

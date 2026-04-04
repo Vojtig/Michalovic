@@ -40,8 +40,6 @@ function ListonicApp() {
   const [syncStatus, setSyncStatus] = useState('loading');
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
-
-  // Načtení dat z API při startu
   useEffect(() => {
     fetch(API_URL, {
       headers: {
@@ -59,8 +57,6 @@ function ListonicApp() {
       isMounted.current = true;
     });
   }, []);
-
-  // Uložení do API při každé změně seznamů (debounce 800ms)
   useEffect(() => {
     if (!isMounted.current) return;
     localStorage.setItem('listonicLists', JSON.stringify(lists));
@@ -81,76 +77,17 @@ function ListonicApp() {
     localStorage.setItem('listonicHistory', JSON.stringify(history));
   }, [history]);
   const activeList = activeListId ? lists.find(l => l.id === activeListId) : null;
-  const getSuggestions = () => {
-    if (!itemInput.trim()) return history.slice(0, 6);
-    return history.filter(h => h.toLowerCase().includes(itemInput.toLowerCase())).slice(0, 6);
-  };
   const addItem = (name = null) => {
     const itemName = (name || itemInput).trim();
     if (!itemName) return;
-    const newItem = {
-      id: Date.now(),
-      name: itemName,
-      qty: itemQty.trim(),
-      unit: itemUnit,
-      checked: false
-    };
-    setLists(lists.map(l => l.id === activeListId ? {
-      ...l,
-      items: [...l.items, newItem]
-    } : l));
-    if (!history.includes(itemName)) setHistory([itemName, ...history].slice(0, 50));
+    setLists(addItemToList(lists, activeListId, itemName, itemQty, itemUnit));
+    setHistory(addToHistory(history, itemName));
     setItemInput('');
     setItemQty('');
     setItemUnit('');
     setShowSuggestions(false);
   };
-  const toggleItem = itemId => {
-    setLists(lists.map(l => l.id === activeListId ? {
-      ...l,
-      items: l.items.map(i => i.id === itemId ? {
-        ...i,
-        checked: !i.checked
-      } : i)
-    } : l));
-  };
-  const deleteItem = itemId => {
-    setLists(lists.map(l => l.id === activeListId ? {
-      ...l,
-      items: l.items.filter(i => i.id !== itemId)
-    } : l));
-  };
-  const clearChecked = () => {
-    setLists(lists.map(l => l.id === activeListId ? {
-      ...l,
-      items: l.items.filter(i => !i.checked)
-    } : l));
-  };
-  const addList = () => {
-    if (!newListName.trim()) return;
-    const newList = {
-      id: Date.now(),
-      name: newListName.trim(),
-      items: []
-    };
-    setLists([...lists, newList]);
-    setNewListName('');
-    setShowAddList(false);
-    setActiveListId(newList.id);
-  };
-  const deleteList = listId => {
-    setLists(lists.filter(l => l.id !== listId));
-    if (activeListId === listId) setActiveListId(null);
-  };
-  const saveEditList = () => {
-    if (!editingListName.trim()) return;
-    setLists(lists.map(l => l.id === editingListId ? {
-      ...l,
-      name: editingListName.trim()
-    } : l));
-    setEditingListId(null);
-    setEditingListName('');
-  };
+  const suggestions = getSuggestions(history, itemInput);
   const syncLabel = {
     loading: '⏳ Načítám...',
     ok: '✓ Synchronizováno',
@@ -193,12 +130,32 @@ function ListonicApp() {
       placeholder: "N\xE1zev nov\xE9ho seznamu...",
       value: newListName,
       onChange: e => setNewListName(e.target.value),
-      onKeyPress: e => e.key === 'Enter' && addList(),
+      onKeyPress: e => e.key === 'Enter' && (() => {
+        if (!newListName.trim()) return;
+        const {
+          lists: newLists,
+          newList
+        } = createList(lists, newListName);
+        setLists(newLists);
+        setNewListName('');
+        setShowAddList(false);
+        setActiveListId(newList.id);
+      })(),
       className: "lt-input"
     }), /*#__PURE__*/React.createElement("div", {
       className: "lt-form-actions"
     }, /*#__PURE__*/React.createElement("button", {
-      onClick: addList,
+      onClick: () => {
+        if (!newListName.trim()) return;
+        const {
+          lists: newLists,
+          newList
+        } = createList(lists, newListName);
+        setLists(newLists);
+        setNewListName('');
+        setShowAddList(false);
+        setActiveListId(newList.id);
+      },
       className: "lt-btn-primary"
     }, "Vytvo\u0159it"), /*#__PURE__*/React.createElement("button", {
       onClick: () => {
@@ -236,10 +193,20 @@ function ListonicApp() {
         type: "text",
         value: editingListName,
         onChange: e => setEditingListName(e.target.value),
-        onKeyPress: e => e.key === 'Enter' && saveEditList(),
+        onKeyPress: e => e.key === 'Enter' && (() => {
+          if (!editingListName.trim()) return;
+          setLists(renameList(lists, editingListId, editingListName));
+          setEditingListId(null);
+          setEditingListName('');
+        })(),
         className: "lt-input lt-edit-input"
       }), /*#__PURE__*/React.createElement("button", {
-        onClick: saveEditList,
+        onClick: () => {
+          if (!editingListName.trim()) return;
+          setLists(renameList(lists, editingListId, editingListName));
+          setEditingListId(null);
+          setEditingListName('');
+        },
         className: "lt-btn-primary lt-btn-sm"
       }, "OK")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
         className: "lt-list-card-top"
@@ -258,7 +225,8 @@ function ListonicApp() {
         className: "lt-icon-btn",
         onClick: e => {
           e.stopPropagation();
-          deleteList(list.id);
+          setLists(removeList(lists, list.id));
+          if (activeListId === list.id) setActiveListId(null);
         }
       }, "\uD83D\uDDD1\uFE0F"))), /*#__PURE__*/React.createElement("div", {
         className: "lt-list-card-name"
@@ -280,7 +248,6 @@ function ListonicApp() {
   // --- LIST DETAIL SCREEN ---
   const unchecked = activeList.items.filter(i => !i.checked);
   const checked = activeList.items.filter(i => i.checked);
-  const suggestions = getSuggestions();
   return /*#__PURE__*/React.createElement("div", {
     className: "lt-app"
   }, /*#__PURE__*/React.createElement("div", {
@@ -297,7 +264,7 @@ function ListonicApp() {
     }
   }, syncLabel[syncStatus]), checked.length > 0 && /*#__PURE__*/React.createElement("button", {
     className: "lt-header-action lt-clear-btn",
-    onClick: clearChecked,
+    onClick: () => setLists(clearCheckedFromList(lists, activeListId)),
     title: "Smazat nakoupen\xE9"
   }, "\uD83D\uDDD1\uFE0F")), /*#__PURE__*/React.createElement("div", {
     className: "lt-detail"
@@ -362,7 +329,7 @@ function ListonicApp() {
     className: "lt-item"
   }, /*#__PURE__*/React.createElement("button", {
     className: "lt-check-btn",
-    onClick: () => toggleItem(item.id)
+    onClick: () => setLists(toggleItemInList(lists, activeListId, item.id))
   }, /*#__PURE__*/React.createElement("span", {
     className: "lt-check-circle"
   })), /*#__PURE__*/React.createElement("div", {
@@ -373,7 +340,7 @@ function ListonicApp() {
     className: "lt-item-qty"
   }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
     className: "lt-delete-btn",
-    onClick: () => deleteItem(item.id)
+    onClick: () => setLists(deleteItemFromList(lists, activeListId, item.id))
   }, "\u2715"))), checked.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "lt-section-divider"
   }, /*#__PURE__*/React.createElement("span", null, "Nakoupeno (", checked.length, ")")), checked.map(item => /*#__PURE__*/React.createElement("div", {
@@ -381,7 +348,7 @@ function ListonicApp() {
     className: "lt-item lt-item-done"
   }, /*#__PURE__*/React.createElement("button", {
     className: "lt-check-btn lt-check-done",
-    onClick: () => toggleItem(item.id)
+    onClick: () => setLists(toggleItemInList(lists, activeListId, item.id))
   }, /*#__PURE__*/React.createElement("span", {
     className: "lt-check-circle"
   }, "\u2713")), /*#__PURE__*/React.createElement("div", {
@@ -392,7 +359,7 @@ function ListonicApp() {
     className: "lt-item-qty"
   }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
     className: "lt-delete-btn",
-    onClick: () => deleteItem(item.id)
+    onClick: () => setLists(deleteItemFromList(lists, activeListId, item.id))
   }, "\u2715")))), activeList.items.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "lt-empty-list"
   }, /*#__PURE__*/React.createElement("div", {
