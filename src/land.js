@@ -267,9 +267,9 @@ function App() {
     className: "app-info"
   }, /*#__PURE__*/React.createElement("div", {
     className: "app-name"
-  }, "Listonic"), /*#__PURE__*/React.createElement("div", {
+  }, "Seznamy"), /*#__PURE__*/React.createElement("div", {
     className: "app-description"
-  }, "N\xE1kupn\xED seznamy jako Listonic \u2014 v\xEDce seznam\u016F, mno\u017Estv\xED, jednotky a chytr\xE9 n\xE1vrhy"), /*#__PURE__*/React.createElement("span", {
+  }, "N\xE1kupn\xED seznamy \u2014 v\xEDce seznam\u016F, mno\u017Estv\xED, jednotky a chytr\xE9 n\xE1vrhy"), /*#__PURE__*/React.createElement("span", {
     className: "app-category"
   }, "Produktivita")))))), /*#__PURE__*/React.createElement("footer", {
     className: "footer"

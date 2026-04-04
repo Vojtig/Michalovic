@@ -174,9 +174,9 @@ function App() {
                 🛒
               </div>
               <div className="app-info">
-                <div className="app-name">Listonic</div>
+                <div className="app-name">Seznamy</div>
                 <div className="app-description">
-                  Nákupní seznamy jako Listonic — více seznamů, množství, jednotky a chytré návrhy
+                  Nákupní seznamy — více seznamů, množství, jednotky a chytré návrhy
                 </div>
                 <span className="app-category">Produktivita</span>
               </div>
