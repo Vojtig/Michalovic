@@ -370,5 +370,11 @@ function ListonicApp() {
     className: "lt-empty-sub"
   }, "P\u0159idej prvn\xED polo\u017Eku v\xFD\u0161e")))));
 }
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const rootEl = document.getElementById('root') || (() => {
+  const el = document.createElement('div');
+  el.id = 'root';
+  document.body.appendChild(el);
+  return el;
+})();
+const root = ReactDOM.createRoot(rootEl);
 root.render(/*#__PURE__*/React.createElement(ListonicApp, null));

@@ -313,5 +313,11 @@ function ListonicApp() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const rootEl = document.getElementById('root') || (() => {
+  const el = document.createElement('div');
+  el.id = 'root';
+  document.body.appendChild(el);
+  return el;
+})();
+const root = ReactDOM.createRoot(rootEl);
 root.render(<ListonicApp />);
