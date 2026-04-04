@@ -16,6 +16,19 @@ const FIREBASE_CONFIG = {
 const DB_PATH = 'mic-9kX4mW2pR7vL8j/lists';
 const firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
+
+// Firebase neukládá prázdná pole — vrací null nebo objekt místo array
+const toArray = val => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return Object.values(val);
+};
+const normalizeLists = data => {
+  return toArray(data).map(list => ({
+    ...list,
+    items: toArray(list.items)
+  }));
+};
 const DEFAULT_LISTS = [{
   id: 1,
   name: 'Nákup',
@@ -57,10 +70,11 @@ function ListonicApp() {
     const ref = db.ref(DB_PATH);
     const handler = ref.on('value', snapshot => {
       const data = snapshot.val();
-      if (data && Array.isArray(data)) {
+      if (data) {
+        const normalized = normalizeLists(data);
         remoteUpdate.current = true;
-        setLists(data);
-        localStorage.setItem('listonicLists', JSON.stringify(data));
+        setLists(normalized);
+        localStorage.setItem('listonicLists', JSON.stringify(normalized));
       }
       setSyncStatus('ok');
       initialized.current = true;
