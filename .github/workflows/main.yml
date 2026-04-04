@@ -44,5 +44,11 @@ jobs:
           **/.git*
           **/node_modules/**
           **/tests/**
+          **/coverage/**
           **/.babelrc
           **/package*.json
+          **/.mcp.json
+          **/CLAUDE.md
+          **/STRUCTURE.md
+          **/.gitignore
+          **/shopping-list-app/**
