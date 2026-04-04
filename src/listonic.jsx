@@ -7,11 +7,16 @@ const API_TOKEN = 'mic-9kX4mW2pR7vL8j';
 
 const DEFAULT_LISTS = [{ id: 1, name: 'Nákup', items: [] }];
 
+const normalizeLists = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return data.map(list => ({ ...list, items: Array.isArray(list.items) ? list.items : [] }));
+};
+
 function ListonicApp() {
   const [lists, setLists] = useState(() => {
     try {
       const saved = localStorage.getItem('listonicLists');
-      return saved ? JSON.parse(saved) : DEFAULT_LISTS;
+      return normalizeLists(JSON.parse(saved)) || DEFAULT_LISTS;
     } catch { return DEFAULT_LISTS; }
   });
   const [activeListId, setActiveListId] = useState(null);
@@ -38,9 +43,10 @@ function ListonicApp() {
     fetch(API_URL, { headers: { 'X-Token': API_TOKEN } })
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setLists(data);
-          localStorage.setItem('listonicLists', JSON.stringify(data));
+        const normalized = normalizeLists(data);
+        if (normalized) {
+          setLists(normalized);
+          localStorage.setItem('listonicLists', JSON.stringify(normalized));
         }
         setSyncStatus('ok');
         isMounted.current = true;
