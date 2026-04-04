@@ -2,34 +2,8 @@ const { useState, useEffect, useRef } = React;
 
 const UNITS = ['ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAcf773krf0tRuGumoavVTPp3AZQ0G4K3Q",
-  authDomain: "michalovic-lists.firebaseapp.com",
-  databaseURL: "https://michalovic-lists-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "michalovic-lists",
-  storageBucket: "michalovic-lists.firebasestorage.app",
-  messagingSenderId: "714903976555",
-  appId: "1:714903976555:web:a97c76ac2b79d767158f2e"
-};
-
-const DB_PATH = 'mic-9kX4mW2pR7vL8j/lists';
-
-const firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
-const db = firebase.database();
-
-// Firebase neukládá prázdná pole — vrací null nebo objekt místo array
-const toArray = (val) => {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  return Object.values(val);
-};
-
-const normalizeLists = (data) => {
-  return toArray(data).map(list => ({
-    ...list,
-    items: toArray(list.items),
-  }));
-};
+const API_URL = 'api/lists.php';
+const API_TOKEN = 'mic-9kX4mW2pR7vL8j';
 
 const DEFAULT_LISTS = [{ id: 1, name: 'Nákup', items: [] }];
 
@@ -55,43 +29,44 @@ function ListonicApp() {
   const [itemQty, setItemQty] = useState('');
   const [itemUnit, setItemUnit] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [syncStatus, setSyncStatus] = useState('loading'); // loading | ok | saving | offline
+  const [syncStatus, setSyncStatus] = useState('loading');
 
-  const remoteUpdate = useRef(false);
-  const initialized = useRef(false);
+  const saveTimer = useRef(null);
+  const isMounted = useRef(false);
 
-  // Firebase real-time listener
+  // Načtení dat z API při startu
   useEffect(() => {
-    const ref = db.ref(DB_PATH);
-    const handler = ref.on('value', snapshot => {
-      const data = snapshot.val();
-      if (data) {
-        const normalized = normalizeLists(data);
-        remoteUpdate.current = true;
-        setLists(normalized);
-        localStorage.setItem('listonicLists', JSON.stringify(normalized));
-      }
-      setSyncStatus('ok');
-      initialized.current = true;
-    }, () => {
-      setSyncStatus('offline');
-      initialized.current = true;
-    });
-    return () => ref.off('value', handler);
+    fetch(API_URL, { headers: { 'X-Token': API_TOKEN } })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLists(data);
+          localStorage.setItem('listonicLists', JSON.stringify(data));
+        }
+        setSyncStatus('ok');
+        isMounted.current = true;
+      })
+      .catch(() => {
+        setSyncStatus('offline');
+        isMounted.current = true;
+      });
   }, []);
 
-  // Write to Firebase when lists change (skip if change came from Firebase)
+  // Uložení do API při každé změně seznamů (debounce 800ms)
   useEffect(() => {
-    if (!initialized.current) return;
-    if (remoteUpdate.current) {
-      remoteUpdate.current = false;
-      return;
-    }
-    setSyncStatus('saving');
+    if (!isMounted.current) return;
     localStorage.setItem('listonicLists', JSON.stringify(lists));
-    db.ref(DB_PATH).set(lists)
-      .then(() => setSyncStatus('ok'))
-      .catch(() => setSyncStatus('offline'));
+    setSyncStatus('saving');
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Token': API_TOKEN },
+        body: JSON.stringify(lists),
+      })
+        .then(() => setSyncStatus('ok'))
+        .catch(() => setSyncStatus('offline'));
+    }, 800);
   }, [lists]);
 
   useEffect(() => {
