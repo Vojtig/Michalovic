@@ -4,6 +4,16 @@ const UNITS = ['', 'ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
 const CATEGORIES = ['Polévky', 'Hlavní jídla', 'Dezerty', 'Přílohy', 'Snídaně', 'Ostatní'];
 const DIFFICULTIES = ['Jednoduché', 'Střední', 'Náročné'];
 
+const RECIPE_EMOJIS = [
+  '🍽️','🍲','🥘','🍜','🍝','🍛','🍣','🍱','🥗','🥙','🌮','🌯',
+  '🥪','🍔','🍕','🥩','🍗','🍖','🥚','🍳','🧆','🥞','🧇','🧈',
+  '🥧','🍰','🎂','🧁','🍩','🍪','🍫','🍮','🍯','🍦','🍧','🍨',
+  '🥐','🥖','🍞','🥨','🧀','🍅','🥑','🥦','🥕','🌽','🍄','🧄',
+  '🧅','🍋','🍊','🍎','🍇','🍓','🍒','🍑','🥭','🍍','🫐','🥝',
+  '🍵','☕','🧋','🥤','🍹','🍷','🍺','🥂','🫖','🧃',
+  '🔥','⭐','👨‍🍳','🫕','🥣','🫙','🧂','🍴','🥄',
+];
+
 const ICON_COLORS = [
   'linear-gradient(135deg,#f093fb,#f5576c)',
   'linear-gradient(135deg,#4facfe,#00f2fe)',
@@ -258,6 +268,7 @@ function RecipeForm({ recipe, onSave, onBack, onDelete }) {
   const [title, setTitle]             = useState(recipe ? recipe.title : '');
   const [description, setDescription] = useState(recipe ? recipe.description : '');
   const [emoji, setEmoji]             = useState(recipe ? recipe.emoji : '🍽️');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [category, setCategory]       = useState(recipe ? recipe.category : '');
   const [prepTime, setPrepTime]       = useState(recipe ? String(recipe.prepTime || '') : '');
   const [cookTime, setCookTime]       = useState(recipe ? String(recipe.cookTime || '') : '');
@@ -338,9 +349,28 @@ function RecipeForm({ recipe, onSave, onBack, onDelete }) {
             </div>
 
             <div className="rc-form-row">
-              <div className="rc-field">
+              <div className="rc-field" style={{position:'relative'}}>
                 <label className="rc-label">Emoji ikona</label>
-                <input className="rc-input" value={emoji} onChange={e => setEmoji(e.target.value)} placeholder="🍽️" maxLength={2} />
+                <button
+                  type="button"
+                  className="rc-emoji-btn"
+                  onClick={() => setShowEmojiPicker(p => !p)}
+                >
+                  <span className="rc-emoji-preview">{emoji}</span>
+                  <span className="rc-emoji-caret">▾</span>
+                </button>
+                {showEmojiPicker && (
+                  <div className="rc-emoji-dropdown">
+                    {RECIPE_EMOJIS.map(e => (
+                      <button
+                        key={e}
+                        type="button"
+                        className={'rc-emoji-opt' + (e === emoji ? ' selected' : '')}
+                        onClick={() => { setEmoji(e); setShowEmojiPicker(false); }}
+                      >{e}</button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="rc-field">
                 <label className="rc-label">Kategorie</label>

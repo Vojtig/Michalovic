@@ -32,6 +32,44 @@ React is available globally as `window.React`/`window.ReactDOM` (CDN). Component
 
 **localStorage** — data is per-domain, so all apps on the same domain share the same localStorage namespace. Use unique keys (e.g. `shoppingList`, `shoppingHistory`).
 
+## Design System
+
+### Colors
+- **Background:** `#f5f7fa`
+- **Cards:** white (`#ffffff`)
+- **Text:** `#333` primary · `#666` secondary · `#999` muted
+
+**Landing / generic accent** — purple-blue gradient:
+- `#6a11cb` (purple) → `#2575fc` (blue)
+- Use: `linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)`
+
+**Shopping app accent** — green: `#27ae60`, hover `#229954`
+
+**Lists app accent** — green: `#43a047`, dark `#2e7d32`, hover `#388e3c`
+
+**Danger:** `#e74c3c`, hover `#c0392b`
+
+### Spacing & Layout
+- App max-width: `1200px` (landing), `700px` (lists), `600px` (shopping)
+- Standard padding: `20px`
+- Grid gap: `25px` (landing cards), `16px` (list cards)
+
+### Components
+- **Card:** `border-radius: 12px`, `box-shadow: 0 5px 15px rgba(0,0,0,0.08)`, white bg
+- **Card hover:** `translateY(-5px)` + `box-shadow: 0 10px 25px rgba(0,0,0,0.15)`
+- **Button (primary):** `border-radius: 8px`, `font-weight: 600`, accent bg color
+- **Button (pill/filter):** `border-radius: 50px`, `border: 2px solid`
+- **Input:** `border-radius: 8px`, `border: 2px solid #ddd`, focus changes border to accent color
+- **Accent left border:** `border-left: 5px solid <accent>` (used on section cards)
+
+### Typography
+- Font stack: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`
+- Page title: `2.8rem` · Section heading: `1.3rem` · Body: `1rem` · Small: `0.85rem`
+
+### Responsive
+- Breakpoint: `768px` — stack `.form-row` to column, single-column grid
+- Set `font-size: 16px` on inputs to prevent iOS zoom
+
 ## Deployment
 
 Push to `master` → GitHub Actions automatically FTP-deploys to the server. The workflow excludes `tests/`, `node_modules/`, `.git*`, `.babelrc`, and `package*.json` — only HTML, CSS, and compiled JS in `src/` are uploaded.

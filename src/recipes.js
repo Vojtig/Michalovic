@@ -5,6 +5,7 @@ const {
 const UNITS = ['', 'ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
 const CATEGORIES = ['Polévky', 'Hlavní jídla', 'Dezerty', 'Přílohy', 'Snídaně', 'Ostatní'];
 const DIFFICULTIES = ['Jednoduché', 'Střední', 'Náročné'];
+const RECIPE_EMOJIS = ['🍽️', '🍲', '🥘', '🍜', '🍝', '🍛', '🍣', '🍱', '🥗', '🥙', '🌮', '🌯', '🥪', '🍔', '🍕', '🥩', '🍗', '🍖', '🥚', '🍳', '🧆', '🥞', '🧇', '🧈', '🥧', '🍰', '🎂', '🧁', '🍩', '🍪', '🍫', '🍮', '🍯', '🍦', '🍧', '🍨', '🥐', '🥖', '🍞', '🥨', '🧀', '🍅', '🥑', '🥦', '🥕', '🌽', '🍄', '🧄', '🧅', '🍋', '🍊', '🍎', '🍇', '🍓', '🍒', '🍑', '🥭', '🍍', '🫐', '🥝', '🍵', '☕', '🧋', '🥤', '🍹', '🍷', '🍺', '🥂', '🫖', '🧃', '🔥', '⭐', '👨‍🍳', '🫕', '🥣', '🫙', '🧂', '🍴', '🥄'];
 const ICON_COLORS = ['linear-gradient(135deg,#f093fb,#f5576c)', 'linear-gradient(135deg,#4facfe,#00f2fe)', 'linear-gradient(135deg,#f6d365,#fda085)', 'linear-gradient(135deg,#a8edea,#fed6e3)', 'linear-gradient(135deg,#d4fc79,#96e6a1)', 'linear-gradient(135deg,#ffecd2,#fcb69f)', 'linear-gradient(135deg,#a18cd1,#fbc2eb)', 'linear-gradient(135deg,#fad961,#f76b1c)'];
 function iconColor(id) {
   return ICON_COLORS[id % ICON_COLORS.length];
@@ -278,6 +279,7 @@ function RecipeForm({
   const [title, setTitle] = useState(recipe ? recipe.title : '');
   const [description, setDescription] = useState(recipe ? recipe.description : '');
   const [emoji, setEmoji] = useState(recipe ? recipe.emoji : '🍽️');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [category, setCategory] = useState(recipe ? recipe.category : '');
   const [prepTime, setPrepTime] = useState(recipe ? String(recipe.prepTime || '') : '');
   const [cookTime, setCookTime] = useState(recipe ? String(recipe.cookTime || '') : '');
@@ -365,16 +367,31 @@ function RecipeForm({
   })), /*#__PURE__*/React.createElement("div", {
     className: "rc-form-row"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "rc-field"
+    className: "rc-field",
+    style: {
+      position: 'relative'
+    }
   }, /*#__PURE__*/React.createElement("label", {
     className: "rc-label"
-  }, "Emoji ikona"), /*#__PURE__*/React.createElement("input", {
-    className: "rc-input",
-    value: emoji,
-    onChange: e => setEmoji(e.target.value),
-    placeholder: "\uD83C\uDF7D\uFE0F",
-    maxLength: 2
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "Emoji ikona"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rc-emoji-btn",
+    onClick: () => setShowEmojiPicker(p => !p)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rc-emoji-preview"
+  }, emoji), /*#__PURE__*/React.createElement("span", {
+    className: "rc-emoji-caret"
+  }, "\u25BE")), showEmojiPicker && /*#__PURE__*/React.createElement("div", {
+    className: "rc-emoji-dropdown"
+  }, RECIPE_EMOJIS.map(e => /*#__PURE__*/React.createElement("button", {
+    key: e,
+    type: "button",
+    className: 'rc-emoji-opt' + (e === emoji ? ' selected' : ''),
+    onClick: () => {
+      setEmoji(e);
+      setShowEmojiPicker(false);
+    }
+  }, e)))), /*#__PURE__*/React.createElement("div", {
     className: "rc-field"
   }, /*#__PURE__*/React.createElement("label", {
     className: "rc-label"

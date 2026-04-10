@@ -3,4 +3,6 @@ tests/
 coverage/
 .ssh/
 .claude/
+.superpowers/
 shopping-list-app/
+docs/
