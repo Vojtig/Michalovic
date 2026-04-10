@@ -251,15 +251,203 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
   );
 }
 
-// ── RecipeForm placeholder ──────────────────────────────────────────────────
+// ── RecipeForm ──────────────────────────────────────────────────────────────
 function RecipeForm({ recipe, onSave, onBack, onDelete }) {
+  const isEdit = !!recipe;
+
+  const [title, setTitle]             = useState(recipe ? recipe.title : '');
+  const [description, setDescription] = useState(recipe ? recipe.description : '');
+  const [emoji, setEmoji]             = useState(recipe ? recipe.emoji : '🍽️');
+  const [category, setCategory]       = useState(recipe ? recipe.category : '');
+  const [prepTime, setPrepTime]       = useState(recipe ? String(recipe.prepTime || '') : '');
+  const [cookTime, setCookTime]       = useState(recipe ? String(recipe.cookTime || '') : '');
+  const [difficulty, setDifficulty]   = useState(recipe ? recipe.difficulty : '');
+  const [servings, setServings]       = useState(recipe ? String(recipe.servings || '') : '');
+  const [notes, setNotes]             = useState(recipe ? recipe.notes : '');
+
+  const [ingredients, setIngredients] = useState(
+    recipe && recipe.ingredients && recipe.ingredients.length > 0
+      ? recipe.ingredients
+      : [{ name: '', qty: '', unit: '' }]
+  );
+
+  const [steps, setSteps] = useState(
+    recipe && recipe.steps && recipe.steps.length > 0
+      ? recipe.steps
+      : ['']
+  );
+
+  const updateIng = (i, field, val) => {
+    setIngredients(prev => prev.map((ing, idx) => idx === i ? { ...ing, [field]: val } : ing));
+  };
+  const addIng    = () => setIngredients(prev => [...prev, { name: '', qty: '', unit: '' }]);
+  const removeIng = i  => setIngredients(prev => prev.filter((_, idx) => idx !== i));
+
+  const updateStep = (i, val) => setSteps(prev => prev.map((s, idx) => idx === i ? val : s));
+  const addStep    = () => setSteps(prev => [...prev, '']);
+  const removeStep = i  => setSteps(prev => prev.filter((_, idx) => idx !== i));
+
+  const handleSave = () => {
+    if (!title.trim()) { alert('Zadejte název receptu.'); return; }
+    const cleanIngredients = ingredients
+      .filter(ing => ing.name.trim())
+      .map(ing => ({
+        name: ing.name.trim(),
+        qty: ing.qty === '' ? null : parseFloat(ing.qty) || null,
+        unit: ing.unit,
+      }));
+    const cleanSteps = steps.filter(s => s.trim());
+    onSave({
+      ...(recipe || {}),
+      title: title.trim(),
+      description: description.trim(),
+      emoji,
+      category: category.trim(),
+      prepTime: parseInt(prepTime) || null,
+      cookTime: parseInt(cookTime) || null,
+      difficulty,
+      servings: parseInt(servings) || 1,
+      notes: notes.trim(),
+      ingredients: cleanIngredients,
+      steps: cleanSteps,
+    });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm(`Smazat recept "${recipe.title}"?`)) {
+      onDelete(recipe.id);
+    }
+  };
+
   return (
     <div className="rc-app">
       <div className="rc-header">
         <button className="rc-back" onClick={onBack}>←</button>
-        <span className="rc-header-title">{recipe ? 'Upravit recept' : 'Nový recept'}</span>
+        <span className="rc-header-title">{isEdit ? 'Upravit recept' : 'Nový recept'}</span>
       </div>
-      <div className="rc-form"><p style={{padding:'20px',color:'#999'}}>Formulář — připravuje se…</p></div>
+
+      <div className="rc-form">
+        <div className="rc-form-inner">
+
+          <div className="rc-fcard">
+            <div className="rc-fcard-title">Základní informace</div>
+
+            <div className="rc-field">
+              <label className="rc-label">Název *</label>
+              <input className="rc-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Např. Svíčková na smetaně" />
+            </div>
+
+            <div className="rc-form-row">
+              <div className="rc-field">
+                <label className="rc-label">Emoji ikona</label>
+                <input className="rc-input" value={emoji} onChange={e => setEmoji(e.target.value)} placeholder="🍽️" maxLength={2} />
+              </div>
+              <div className="rc-field">
+                <label className="rc-label">Kategorie</label>
+                <input className="rc-input" value={category} onChange={e => setCategory(e.target.value)} list="rc-categories" placeholder="Hlavní jídla" />
+                <datalist id="rc-categories">
+                  {CATEGORIES.map(c => <option key={c} value={c} />)}
+                </datalist>
+              </div>
+            </div>
+
+            <div className="rc-field">
+              <label className="rc-label">Popis</label>
+              <textarea className="rc-textarea" value={description} onChange={e => setDescription(e.target.value)} placeholder="Stručný popis receptu..." rows={2} />
+            </div>
+          </div>
+
+          <div className="rc-fcard">
+            <div className="rc-fcard-title">Detaily</div>
+            <div className="rc-form-row">
+              <div className="rc-field">
+                <label className="rc-label">Příprava (min)</label>
+                <input className="rc-input" type="number" min="0" value={prepTime} onChange={e => setPrepTime(e.target.value)} placeholder="20" />
+              </div>
+              <div className="rc-field">
+                <label className="rc-label">Vaření (min)</label>
+                <input className="rc-input" type="number" min="0" value={cookTime} onChange={e => setCookTime(e.target.value)} placeholder="30" />
+              </div>
+              <div className="rc-field">
+                <label className="rc-label">Porce</label>
+                <input className="rc-input" type="number" min="1" value={servings} onChange={e => setServings(e.target.value)} placeholder="4" />
+              </div>
+            </div>
+            <div className="rc-field">
+              <label className="rc-label">Obtížnost</label>
+              <select className="rc-select" value={difficulty} onChange={e => setDifficulty(e.target.value)}>
+                <option value="">— vyberte —</option>
+                {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="rc-fcard">
+            <div className="rc-fcard-title">Ingredience</div>
+            {ingredients.map((ing, i) => (
+              <div key={i} className="rc-dyn-row">
+                <input
+                  className="rc-input"
+                  placeholder="Název"
+                  value={ing.name}
+                  onChange={e => updateIng(i, 'name', e.target.value)}
+                />
+                <input
+                  className="rc-input rc-qty-input"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="Qty"
+                  value={ing.qty}
+                  onChange={e => updateIng(i, 'qty', e.target.value)}
+                />
+                <select
+                  className="rc-select rc-unit-select"
+                  value={ing.unit}
+                  onChange={e => updateIng(i, 'unit', e.target.value)}
+                >
+                  {UNITS.map(u => <option key={u} value={u}>{u || '—'}</option>)}
+                </select>
+                <button className="rc-remove-btn" onClick={() => removeIng(i)} title="Odebrat">×</button>
+              </div>
+            ))}
+            <button className="rc-add-row-btn" onClick={addIng}>＋ Přidat ingredienci</button>
+          </div>
+
+          <div className="rc-fcard">
+            <div className="rc-fcard-title">Postup</div>
+            {steps.map((step, i) => (
+              <div key={i} className="rc-dyn-row" style={{alignItems:'flex-start'}}>
+                <div className="rc-step-num" style={{marginTop:'8px',flexShrink:0}}>{i + 1}</div>
+                <textarea
+                  className="rc-step-textarea"
+                  value={step}
+                  onChange={e => updateStep(i, e.target.value)}
+                  placeholder={`Krok ${i + 1}...`}
+                  rows={2}
+                />
+                <button className="rc-remove-btn" onClick={() => removeStep(i)} title="Odebrat">×</button>
+              </div>
+            ))}
+            <button className="rc-add-row-btn" onClick={addStep}>＋ Přidat krok</button>
+          </div>
+
+          <div className="rc-fcard">
+            <div className="rc-fcard-title">Poznámky</div>
+            <textarea className="rc-textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Tipy, variace, poznámky..." rows={3} />
+          </div>
+
+          <div className="rc-form-actions">
+            <button className="rc-save-btn" onClick={handleSave}>
+              {isEdit ? '💾 Uložit změny' : '✅ Přidat recept'}
+            </button>
+            {isEdit && (
+              <button className="rc-delete-btn" onClick={handleDelete}>🗑 Smazat</button>
+            )}
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }

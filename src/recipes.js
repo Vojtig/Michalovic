@@ -267,13 +267,75 @@ function RecipeDetail({
   }, /*#__PURE__*/React.createElement("div", null, IngredientSection), /*#__PURE__*/React.createElement("div", null, StepsSection, NotesSection)), DeleteSection)));
 }
 
-// ── RecipeForm placeholder ──────────────────────────────────────────────────
+// ── RecipeForm ──────────────────────────────────────────────────────────────
 function RecipeForm({
   recipe,
   onSave,
   onBack,
   onDelete
 }) {
+  const isEdit = !!recipe;
+  const [title, setTitle] = useState(recipe ? recipe.title : '');
+  const [description, setDescription] = useState(recipe ? recipe.description : '');
+  const [emoji, setEmoji] = useState(recipe ? recipe.emoji : '🍽️');
+  const [category, setCategory] = useState(recipe ? recipe.category : '');
+  const [prepTime, setPrepTime] = useState(recipe ? String(recipe.prepTime || '') : '');
+  const [cookTime, setCookTime] = useState(recipe ? String(recipe.cookTime || '') : '');
+  const [difficulty, setDifficulty] = useState(recipe ? recipe.difficulty : '');
+  const [servings, setServings] = useState(recipe ? String(recipe.servings || '') : '');
+  const [notes, setNotes] = useState(recipe ? recipe.notes : '');
+  const [ingredients, setIngredients] = useState(recipe && recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients : [{
+    name: '',
+    qty: '',
+    unit: ''
+  }]);
+  const [steps, setSteps] = useState(recipe && recipe.steps && recipe.steps.length > 0 ? recipe.steps : ['']);
+  const updateIng = (i, field, val) => {
+    setIngredients(prev => prev.map((ing, idx) => idx === i ? {
+      ...ing,
+      [field]: val
+    } : ing));
+  };
+  const addIng = () => setIngredients(prev => [...prev, {
+    name: '',
+    qty: '',
+    unit: ''
+  }]);
+  const removeIng = i => setIngredients(prev => prev.filter((_, idx) => idx !== i));
+  const updateStep = (i, val) => setSteps(prev => prev.map((s, idx) => idx === i ? val : s));
+  const addStep = () => setSteps(prev => [...prev, '']);
+  const removeStep = i => setSteps(prev => prev.filter((_, idx) => idx !== i));
+  const handleSave = () => {
+    if (!title.trim()) {
+      alert('Zadejte název receptu.');
+      return;
+    }
+    const cleanIngredients = ingredients.filter(ing => ing.name.trim()).map(ing => ({
+      name: ing.name.trim(),
+      qty: ing.qty === '' ? null : parseFloat(ing.qty) || null,
+      unit: ing.unit
+    }));
+    const cleanSteps = steps.filter(s => s.trim());
+    onSave({
+      ...(recipe || {}),
+      title: title.trim(),
+      description: description.trim(),
+      emoji,
+      category: category.trim(),
+      prepTime: parseInt(prepTime) || null,
+      cookTime: parseInt(cookTime) || null,
+      difficulty,
+      servings: parseInt(servings) || 1,
+      notes: notes.trim(),
+      ingredients: cleanIngredients,
+      steps: cleanSteps
+    });
+  };
+  const handleDelete = () => {
+    if (window.confirm(`Smazat recept "${recipe.title}"?`)) {
+      onDelete(recipe.id);
+    }
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "rc-app"
   }, /*#__PURE__*/React.createElement("div", {
@@ -283,14 +345,194 @@ function RecipeForm({
     onClick: onBack
   }, "\u2190"), /*#__PURE__*/React.createElement("span", {
     className: "rc-header-title"
-  }, recipe ? 'Upravit recept' : 'Nový recept')), /*#__PURE__*/React.createElement("div", {
+  }, isEdit ? 'Upravit recept' : 'Nový recept')), /*#__PURE__*/React.createElement("div", {
     className: "rc-form"
-  }, /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-form-inner"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard-title"
+  }, "Z\xE1kladn\xED informace"), /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "N\xE1zev *"), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    value: title,
+    onChange: e => setTitle(e.target.value),
+    placeholder: "Nap\u0159. Sv\xED\u010Dkov\xE1 na smetan\u011B"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rc-form-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "Emoji ikona"), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    value: emoji,
+    onChange: e => setEmoji(e.target.value),
+    placeholder: "\uD83C\uDF7D\uFE0F",
+    maxLength: 2
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "Kategorie"), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    value: category,
+    onChange: e => setCategory(e.target.value),
+    list: "rc-categories",
+    placeholder: "Hlavn\xED j\xEDdla"
+  }), /*#__PURE__*/React.createElement("datalist", {
+    id: "rc-categories"
+  }, CATEGORIES.map(c => /*#__PURE__*/React.createElement("option", {
+    key: c,
+    value: c
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "Popis"), /*#__PURE__*/React.createElement("textarea", {
+    className: "rc-textarea",
+    value: description,
+    onChange: e => setDescription(e.target.value),
+    placeholder: "Stru\u010Dn\xFD popis receptu...",
+    rows: 2
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard-title"
+  }, "Detaily"), /*#__PURE__*/React.createElement("div", {
+    className: "rc-form-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "P\u0159\xEDprava (min)"), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    type: "number",
+    min: "0",
+    value: prepTime,
+    onChange: e => setPrepTime(e.target.value),
+    placeholder: "20"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "Va\u0159en\xED (min)"), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    type: "number",
+    min: "0",
+    value: cookTime,
+    onChange: e => setCookTime(e.target.value),
+    placeholder: "30"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "Porce"), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    type: "number",
+    min: "1",
+    value: servings,
+    onChange: e => setServings(e.target.value),
+    placeholder: "4"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "rc-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "rc-label"
+  }, "Obt\xED\u017Enost"), /*#__PURE__*/React.createElement("select", {
+    className: "rc-select",
+    value: difficulty,
+    onChange: e => setDifficulty(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "\u2014 vyberte \u2014"), DIFFICULTIES.map(d => /*#__PURE__*/React.createElement("option", {
+    key: d,
+    value: d
+  }, d))))), /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard-title"
+  }, "Ingredience"), ingredients.map((ing, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "rc-dyn-row"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    placeholder: "N\xE1zev",
+    value: ing.name,
+    onChange: e => updateIng(i, 'name', e.target.value)
+  }), /*#__PURE__*/React.createElement("input", {
+    className: "rc-input rc-qty-input",
+    type: "number",
+    min: "0",
+    step: "any",
+    placeholder: "Qty",
+    value: ing.qty,
+    onChange: e => updateIng(i, 'qty', e.target.value)
+  }), /*#__PURE__*/React.createElement("select", {
+    className: "rc-select rc-unit-select",
+    value: ing.unit,
+    onChange: e => updateIng(i, 'unit', e.target.value)
+  }, UNITS.map(u => /*#__PURE__*/React.createElement("option", {
+    key: u,
+    value: u
+  }, u || '—'))), /*#__PURE__*/React.createElement("button", {
+    className: "rc-remove-btn",
+    onClick: () => removeIng(i),
+    title: "Odebrat"
+  }, "\xD7"))), /*#__PURE__*/React.createElement("button", {
+    className: "rc-add-row-btn",
+    onClick: addIng
+  }, "\uFF0B P\u0159idat ingredienci")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard-title"
+  }, "Postup"), steps.map((step, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "rc-dyn-row",
     style: {
-      padding: '20px',
-      color: '#999'
+      alignItems: 'flex-start'
     }
-  }, "Formul\xE1\u0159 \u2014 p\u0159ipravuje se\u2026")));
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-step-num",
+    style: {
+      marginTop: '8px',
+      flexShrink: 0
+    }
+  }, i + 1), /*#__PURE__*/React.createElement("textarea", {
+    className: "rc-step-textarea",
+    value: step,
+    onChange: e => updateStep(i, e.target.value),
+    placeholder: `Krok ${i + 1}...`,
+    rows: 2
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "rc-remove-btn",
+    onClick: () => removeStep(i),
+    title: "Odebrat"
+  }, "\xD7"))), /*#__PURE__*/React.createElement("button", {
+    className: "rc-add-row-btn",
+    onClick: addStep
+  }, "\uFF0B P\u0159idat krok")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-fcard-title"
+  }, "Pozn\xE1mky"), /*#__PURE__*/React.createElement("textarea", {
+    className: "rc-textarea",
+    value: notes,
+    onChange: e => setNotes(e.target.value),
+    placeholder: "Tipy, variace, pozn\xE1mky...",
+    rows: 3
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rc-form-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-save-btn",
+    onClick: handleSave
+  }, isEdit ? '💾 Uložit změny' : '✅ Přidat recept'), isEdit && /*#__PURE__*/React.createElement("button", {
+    className: "rc-delete-btn",
+    onClick: handleDelete
+  }, "\uD83D\uDDD1 Smazat")))));
 }
 
 // ── App ─────────────────────────────────────────────────────────────────────
