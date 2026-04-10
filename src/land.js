@@ -271,7 +271,31 @@ function App() {
     className: "app-description"
   }, "N\xE1kupn\xED seznamy \u2014 v\xEDce seznam\u016F, mno\u017Estv\xED, jednotky a chytr\xE9 n\xE1vrhy"), /*#__PURE__*/React.createElement("span", {
     className: "app-category"
-  }, "Produktivita")))))), /*#__PURE__*/React.createElement("footer", {
+  }, "Produktivita")))), /*#__PURE__*/React.createElement("a", {
+    href: "recipes.html",
+    style: {
+      textDecoration: 'none',
+      color: 'inherit'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-card",
+    style: {
+      borderTopColor: '#6a11cb'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-icon",
+    style: {
+      backgroundColor: '#f3e5f5'
+    }
+  }, "\uD83C\uDF7D\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    className: "app-info"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-name"
+  }, "Recepty"), /*#__PURE__*/React.createElement("div", {
+    className: "app-description"
+  }, "Ulo\u017Ete recepty, upravte porce a p\u0159idejte ingredience p\u0159\xEDmo do n\xE1kupn\xEDho seznamu"), /*#__PURE__*/React.createElement("span", {
+    className: "app-category"
+  }, "Kuchyn\u011B")))))), /*#__PURE__*/React.createElement("footer", {
     className: "footer"
   }, /*#__PURE__*/React.createElement("p", null, "\xA9 ", new Date().getFullYear(), " M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "footer-note"

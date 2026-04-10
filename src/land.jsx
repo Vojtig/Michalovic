@@ -182,6 +182,20 @@ function App() {
               </div>
             </div>
           </a>
+          <a href="recipes.html" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="app-card" style={{ borderTopColor: '#6a11cb' }}>
+              <div className="app-icon" style={{ backgroundColor: '#f3e5f5' }}>
+                🍽️
+              </div>
+              <div className="app-info">
+                <div className="app-name">Recepty</div>
+                <div className="app-description">
+                  Uložte recepty, upravte porce a přidejte ingredience přímo do nákupního seznamu
+                </div>
+                <span className="app-category">Kuchyně</span>
+              </div>
+            </div>
+          </a>
         </div>
       </main>
 
