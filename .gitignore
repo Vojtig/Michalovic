@@ -1,6 +1,5 @@
 .worktrees/
 node_modules/
-tests/
 coverage/
 .ssh/
 .claude/
