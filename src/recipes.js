@@ -83,18 +83,156 @@ function RecipeList({
   }, "\u203A"))))));
 }
 
-// ── RecipeDetail placeholder ────────────────────────────────────────────────
+// ── RecipeDetail ────────────────────────────────────────────────────────────
 function RecipeDetail({
   recipe,
   onBack,
   onEdit,
   onDelete
 }) {
-  if (!recipe) return /*#__PURE__*/React.createElement("div", {
-    className: "rc-app"
+  const [servings, setServings] = useState(recipe ? recipe.servings || 1 : 1);
+  const [checkedMap, setCheckedMap] = useState({});
+  const [toast, setToast] = useState('');
+  useEffect(() => {
+    if (recipe) setServings(recipe.servings || 1);
+    setCheckedMap({});
+  }, [recipe ? recipe.id : null]);
+  if (!recipe) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "rc-app"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rc-header"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "rc-back",
+      onClick: onBack
+    }, "\u2190"), /*#__PURE__*/React.createElement("span", {
+      className: "rc-header-title"
+    }, "Recept nenalezen")), /*#__PURE__*/React.createElement("div", {
+      className: "rc-detail"
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: '#999',
+        textAlign: 'center',
+        paddingTop: '40px'
+      }
+    }, "Tento recept neexistuje.")));
+  }
+  const baseServings = recipe.servings || 1;
+  const toggleIng = name => {
+    setCheckedMap(prev => ({
+      ...prev,
+      [name]: prev[name] === false ? true : false
+    }));
+  };
+  const isChecked = name => checkedMap[name] !== false;
+  const handleAddToListonic = () => {
+    try {
+      const lists = JSON.parse(localStorage.getItem('listonicLists')) || [];
+      const updated = addRecipeToListonic(lists, recipe.ingredients || [], checkedMap, servings, baseServings);
+      localStorage.setItem('listonicLists', JSON.stringify(updated));
+      setToast('Přidáno do seznamu ✓');
+      setTimeout(() => setToast(''), 2500);
+    } catch (e) {
+      setToast('Chyba při přidávání');
+      setTimeout(() => setToast(''), 2500);
+    }
+  };
+  const handleDelete = () => {
+    if (window.confirm(`Smazat recept "${recipe.title}"?`)) {
+      onDelete(recipe.id);
+    }
+  };
+  const metaItems = [recipe.prepTime && {
+    icon: '⏱',
+    label: 'Příprava',
+    val: `${recipe.prepTime} min`
+  }, recipe.cookTime && {
+    icon: '🔥',
+    label: 'Vaření',
+    val: `${recipe.cookTime} min`
+  }, recipe.difficulty && {
+    icon: '🍽️',
+    label: 'Obtížnost',
+    val: recipe.difficulty
+  }, recipe.category && {
+    icon: '📂',
+    label: 'Kategorie',
+    val: recipe.category
+  }].filter(Boolean);
+  const IngredientSection = /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "rc-detail"
-  }, /*#__PURE__*/React.createElement("p", null, "Recept nenalezen.")));
+    className: "rc-dcard-title"
+  }, "Po\u010Det porc\xED"), /*#__PURE__*/React.createElement("div", {
+    className: "rc-srv-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-srv-btn",
+    onClick: () => setServings(s => Math.max(1, s - 1))
+  }, "\u2212"), /*#__PURE__*/React.createElement("span", {
+    className: "rc-srv-num"
+  }, servings), /*#__PURE__*/React.createElement("button", {
+    className: "rc-srv-btn",
+    onClick: () => setServings(s => s + 1)
+  }, "+"), servings !== baseServings && /*#__PURE__*/React.createElement("span", {
+    className: "rc-srv-orig"
+  }, "(p\u016Fvodn\u011B ", baseServings, ")")), (recipe.ingredients || []).length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard-title",
+    style: {
+      marginTop: '14px'
+    }
+  }, "Ingredience"), recipe.ingredients.map((ing, i) => {
+    const checked = isChecked(ing.name);
+    const scaled = scaleQty(ing.qty, baseServings, servings);
+    const display = formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '');
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: 'rc-ing-row' + (checked ? '' : ' unchecked')
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: checked,
+      onChange: () => toggleIng(ing.name)
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "rc-ing-name"
+    }, ing.name), display.trim() && /*#__PURE__*/React.createElement("span", {
+      className: "rc-ing-qty"
+    }, display.trim()));
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+    className: "rc-add-list-btn",
+    onClick: handleAddToListonic
+  }, "\uD83D\uDED2 P\u0159idat do seznamu"), toast && /*#__PURE__*/React.createElement("div", {
+    className: "rc-toast"
+  }, toast))));
+  const StepsSection = (recipe.steps || []).length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard-title"
+  }, "Postup"), recipe.steps.map((step, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "rc-step"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-step-num"
+  }, i + 1), /*#__PURE__*/React.createElement("div", {
+    className: "rc-step-text"
+  }, step))));
+  const NotesSection = recipe.notes && /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard-title"
+  }, "Pozn\xE1mky"), /*#__PURE__*/React.createElement("div", {
+    className: "rc-notes-text"
+  }, recipe.notes));
+  const DeleteSection = /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      paddingBottom: '8px'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-delete-btn",
+    onClick: handleDelete,
+    style: {
+      margin: '0 auto'
+    }
+  }, "\uD83D\uDDD1 Smazat recept"));
   return /*#__PURE__*/React.createElement("div", {
     className: "rc-app"
   }, /*#__PURE__*/React.createElement("div", {
@@ -109,12 +247,24 @@ function RecipeDetail({
     onClick: onEdit
   }, "\u270F\uFE0F")), /*#__PURE__*/React.createElement("div", {
     className: "rc-detail"
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      padding: '20px',
-      color: '#999'
-    }
-  }, "Detail \u2014 p\u0159ipravuje se\u2026")));
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-detail-inner"
+  }, metaItems.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "rc-dcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-meta-row"
+  }, metaItems.map(m => /*#__PURE__*/React.createElement("div", {
+    key: m.label,
+    className: "rc-meta-item"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-mi-icon"
+  }, m.icon), /*#__PURE__*/React.createElement("div", {
+    className: "rc-mi-label"
+  }, m.label), /*#__PURE__*/React.createElement("div", {
+    className: "rc-mi-val"
+  }, m.val))))), /*#__PURE__*/React.createElement("div", {
+    className: "rc-detail-grid"
+  }, /*#__PURE__*/React.createElement("div", null, IngredientSection), /*#__PURE__*/React.createElement("div", null, StepsSection, NotesSection)), DeleteSection)));
 }
 
 // ── RecipeForm placeholder ──────────────────────────────────────────────────
