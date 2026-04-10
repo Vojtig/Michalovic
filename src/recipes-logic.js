@@ -16,6 +16,7 @@ function formatQty(qty) {
   return rounded % 1 === 0 ? String(Math.round(rounded)) : String(rounded);
 }
 
+// selectedServings = desired (current) count; baseServings = recipe's original serving count
 function buildListonicItems(ingredients, checkedMap, selectedServings, baseServings) {
   return ingredients
     .filter(function (ing) { return checkedMap[ing.name] !== false; })
@@ -40,6 +41,6 @@ function addRecipeToListonic(listonicLists, ingredients, checkedMap, selectedSer
   });
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== 'undefined') {
   module.exports = { scaleQty, formatQty, buildListonicItems, addRecipeToListonic };
 }
