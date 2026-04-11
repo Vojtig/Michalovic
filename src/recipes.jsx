@@ -505,7 +505,7 @@ function App() {
   // On mount: fetch from DB, override localStorage if non-empty;
   // if DB is empty but localStorage has data, push it up to DB now.
   useEffect(() => {
-    fetch(API_URL, { headers: { 'X-Token': API_TOKEN } })
+    fetch(API_URL, { headers: { 'X-Token': API_TOKEN }, cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(data => {
         const normalized = normalizeRecipes(data);

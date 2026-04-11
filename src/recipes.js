@@ -586,7 +586,8 @@ function App() {
     fetch(API_URL, {
       headers: {
         'X-Token': API_TOKEN
-      }
+      },
+      cache: 'no-store'
     }).then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
