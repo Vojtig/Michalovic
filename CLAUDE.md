@@ -70,8 +70,25 @@ React is available globally as `window.React`/`window.ReactDOM` (CDN). Component
 - Breakpoint: `768px` — stack `.form-row` to column, single-column grid
 - Set `font-size: 16px` on inputs to prevent iOS zoom
 
+## Testing
+
+Maintain **at least 80% code coverage** on all pure logic modules (`src/*-logic.js`). Run tests with:
+
+```bash
+npm test              # run all tests
+npm test -- --coverage  # run with coverage report
+```
+
+Coverage is measured by Jest. If a commit touches a logic file, check that coverage stays at or above 80% before committing.
+
 ## Deployment
 
 Push to `master` → GitHub Actions automatically FTP-deploys to the server. The workflow excludes `tests/`, `node_modules/`, `.git*`, `.babelrc`, and `package*.json` — only HTML, CSS, and compiled JS in `src/` are uploaded.
 
 Tests live in `tests/` and are never deployed. Test HTML files are opened directly in a browser; test JS files can be run with Node.
+
+## Before every commit
+
+1. Run `npm run build` if any `.jsx` file was edited.
+2. Run `npm test` and confirm all tests pass.
+3. Review `.gitignore` — it should only exclude files that must not go into git (secrets, build artefacts, editor noise). It must **not** exclude files that are needed for the web hosting (HTML, CSS, compiled JS in `src/`, images). Remove any stale or overly-broad entries.
