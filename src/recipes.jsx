@@ -502,7 +502,8 @@ function App() {
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
 
-  // On mount: fetch from DB, override localStorage if non-empty
+  // On mount: fetch from DB, override localStorage if non-empty;
+  // if DB is empty but localStorage has data, push it up to DB now.
   useEffect(() => {
     fetch(API_URL, { headers: { 'X-Token': API_TOKEN } })
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -511,9 +512,25 @@ function App() {
         if (normalized) {
           setRecipes(normalized);
           localStorage.setItem('recipesData', JSON.stringify(normalized));
+          isMounted.current = true;
+          setSyncStatus('ok');
+        } else {
+          // DB is empty — upload whatever is in localStorage so other devices get it
+          const local = JSON.parse(localStorage.getItem('recipesData') || '[]');
+          isMounted.current = true;
+          if (local.length > 0) {
+            setSyncStatus('saving');
+            fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Token': API_TOKEN },
+              body: JSON.stringify(local),
+            })
+              .then(() => setSyncStatus('ok'))
+              .catch(() => setSyncStatus('offline'));
+          } else {
+            setSyncStatus('ok');
+          }
         }
-        setSyncStatus('ok');
-        isMounted.current = true;
       })
       .catch(() => { setSyncStatus('offline'); isMounted.current = true; });
   }, []);
