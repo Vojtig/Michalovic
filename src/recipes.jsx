@@ -508,7 +508,6 @@ function App() {
     fetch(API_URL, { headers: { 'X-Token': API_TOKEN }, cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(data => {
-        console.log('[recipes] mount fetch returned', data);
         const normalized = normalizeRecipes(data);
         if (normalized) {
           setRecipes(normalized);
@@ -520,7 +519,6 @@ function App() {
           const local = JSON.parse(localStorage.getItem('recipesData') || '[]');
           isMounted.current = true;
           if (local.length > 0) {
-            console.log('[recipes] DB empty, uploading localStorage', local.length, 'recipes');
             setSyncStatus('saving');
             fetch(API_URL, {
               method: 'POST',
@@ -534,25 +532,23 @@ function App() {
           }
         }
       })
-      .catch(err => { console.log('[recipes] mount fetch error', err); setSyncStatus('offline'); isMounted.current = true; });
+      .catch(() => { setSyncStatus('offline'); isMounted.current = true; });
   }, []);
 
   // On change: save to localStorage immediately + debounced POST to DB
   useEffect(() => {
     if (!isMounted.current) return;
-    console.log('[recipes] save effect — recipes count:', recipes.length, '| scheduling POST');
     localStorage.setItem('recipesData', JSON.stringify(recipes));
     setSyncStatus('saving');
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      console.log('[recipes] POST firing with', recipes.length, 'recipes');
       fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Token': API_TOKEN },
         body: JSON.stringify(recipes),
       })
-        .then(r => { console.log('[recipes] POST response status', r.status); setSyncStatus('ok'); })
-        .catch(err => { console.log('[recipes] POST error', err); setSyncStatus('offline'); });
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); setSyncStatus('ok'); })
+        .catch(() => setSyncStatus('offline'));
     }, 800);
   }, [recipes]);
 
