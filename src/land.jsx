@@ -136,32 +136,32 @@ function App() {
       </header>
 
       <a href="weather.html" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-      <div className="weather-section weather-section--link">
-        <h2>Počasí v Čáslavi <span className="weather-detail-hint">Podrobnosti →</span></h2>
-        {loading && <p>Načítám data...</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {weather && (
-          <div className="weather-info">
-            <div className="weather-main">
-              <span className="weather-emoji">{getWeatherDescription(weather.weather_code).emoji}</span>
-              <span className="weather-type">{getWeatherDescription(weather.weather_code).text}</span>
+        <div className="weather-section weather-section--link">
+          <h2>Počasí v Čáslavi <span className="weather-detail-hint">Podrobnosti →</span></h2>
+          {loading && <p>Načítám data...</p>}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {weather && (
+            <div className="weather-info">
+              <div className="weather-main">
+                <span className="weather-emoji">{getWeatherDescription(weather.weather_code).emoji}</span>
+                <span className="weather-type">{getWeatherDescription(weather.weather_code).text}</span>
+              </div>
+              <div className="weather-details">
+                <p><strong>{weather.temperature_2m}°C</strong></p>
+                <p>Vlhkost: {weather.relative_humidity_2m}%</p>
+              </div>
             </div>
-            <div className="weather-details">
-              <p><strong>{weather.temperature_2m}°C</strong></p>
-              <p>Vlhkost: {weather.relative_humidity_2m}%</p>
+          )}
+
+          {hourlyData && (
+            <div className="temperature-chart-container">
+              <h3>Teplotní vývoj na dalších 24h</h3>
+              <div className="chart-wrapper">
+                <canvas ref={chartRef}></canvas>
+              </div>
             </div>
-          </div>
-        )}
-        
-        {hourlyData && (
-          <div className="temperature-chart-container">
-            <h3>Teplotní vývoj na dalších 24h</h3>
-            <div className="chart-wrapper">
-              <canvas ref={chartRef}></canvas>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </a>
 
       <main className="main-content">

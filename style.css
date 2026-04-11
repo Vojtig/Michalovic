@@ -1754,7 +1754,7 @@ body {
 }
 
 /* Weather section — clickable link */
-.weather-section--link { cursor: pointer; transition: box-shadow 0.2s, transform 0.2s; }
+.weather-section--link { cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; }
 .weather-section--link:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.12); transform: translateY(-2px); }
 .weather-detail-hint {
   font-size: 0.75rem;
