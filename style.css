@@ -10,6 +10,9 @@ body {
   background-color: #f5f7fa;
   color: #333;
   line-height: 1.6;
+  /* Endora hosting injects a 50px fixed banner at the bottom of every page.
+     This padding stops it from covering the last row of content. */
+  padding-bottom: 56px;
 }
 
 .App {
