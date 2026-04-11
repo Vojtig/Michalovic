@@ -6,14 +6,15 @@
   "scripts": {
     "build": "npm run build:src",
     "build:src": "babel src/ --out-dir src/ --presets @babel/preset-react",
-    "test": "jest tests/listonic-logic.test.js tests/recipes-logic.test.js --coverage",
+    "test": "jest tests/listonic-logic.test.js tests/recipes-logic.test.js tests/weather-logic.test.js --coverage",
     "test:api": "node tests/api.integration.test.js"
   },
   "jest": {
     "testEnvironment": "node",
     "collectCoverageFrom": [
       "src/listonic-logic.js",
-      "src/recipes-logic.js"
+      "src/recipes-logic.js",
+      "src/weather-logic.js"
     ],
     "coverageThreshold": {
       "global": {
