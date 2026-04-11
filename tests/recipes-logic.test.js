@@ -5,6 +5,7 @@ const {
   formatQty,
   buildListonicItems,
   addRecipeToListonic,
+  normalizeRecipes,
 } = require('../src/recipes-logic.js');
 
 // ===== scaleQty =====
@@ -129,5 +130,31 @@ describe('addRecipeToListonic', () => {
     const lists = [makeList(1, 'Nákup')];
     addRecipeToListonic(lists, ingredients, {}, 4, 4);
     expect(lists[0].items).toHaveLength(0);
+  });
+});
+
+// ===== normalizeRecipes =====
+describe('normalizeRecipes', () => {
+  test('returns null for empty array (preserves localStorage on empty DB response)', () => {
+    expect(normalizeRecipes([])).toBeNull();
+  });
+  test('returns null for non-array', () => {
+    expect(normalizeRecipes(null)).toBeNull();
+    expect(normalizeRecipes(undefined)).toBeNull();
+    expect(normalizeRecipes('[]')).toBeNull();
+  });
+  test('returns the array when non-empty', () => {
+    const recipes = [{ id: 1, title: 'Svíčková' }];
+    expect(normalizeRecipes(recipes)).toBe(recipes);
+  });
+  test('preserves all recipe fields', () => {
+    const recipes = [{ id: 1, title: 'Guláš', category: 'Hlavní jídla', servings: 4 }];
+    const result = normalizeRecipes(recipes);
+    expect(result[0].title).toBe('Guláš');
+    expect(result[0].servings).toBe(4);
+  });
+  test('handles multiple recipes', () => {
+    const recipes = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    expect(normalizeRecipes(recipes)).toHaveLength(3);
   });
 });

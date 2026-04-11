@@ -1763,3 +1763,9 @@ body {
   vertical-align: middle;
   margin-left: 8px;
 }
+
+/* Recipe sync status indicator */
+.rc-sync-indicator { font-size: 0.8rem; margin-left: 6px; }
+.rc-sync--loading, .rc-sync--saving { color: #999; }
+.rc-sync--ok { color: #43a047; }
+.rc-sync--offline { color: #e67e22; }

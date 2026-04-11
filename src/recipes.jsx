@@ -1,4 +1,7 @@
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
+
+const API_URL = 'api/recipes.php';
+const API_TOKEN = 'mic-9kX4mW2pR7vL8j';
 
 const UNITS = ['', 'ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
 const CATEGORIES = ['Polévky', 'Hlavní jídla', 'Dezerty', 'Přílohy', 'Snídaně', 'Ostatní'];
@@ -30,7 +33,9 @@ function iconColor(id) {
 }
 
 // ── RecipeList ──────────────────────────────────────────────────────────────
-function RecipeList({ recipes, onSelect, onAdd }) {
+const SYNC_ICONS = { loading: '⟳', saving: '↑', ok: '✓', offline: '⚡' };
+
+function RecipeList({ recipes, onSelect, onAdd, syncStatus }) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Vše');
 
@@ -47,6 +52,7 @@ function RecipeList({ recipes, onSelect, onAdd }) {
       <div className="rc-header">
         <a href="index.html" className="rc-back">←</a>
         <span className="rc-header-title">🍽️ Recepty</span>
+        {syncStatus && <span className={'rc-sync-indicator rc-sync--' + syncStatus}>{SYNC_ICONS[syncStatus]}</span>}
         <button className="rc-header-action" onClick={onAdd} title="Nový recept">＋</button>
       </div>
 
@@ -491,9 +497,42 @@ function App() {
   const [view, setView] = useState('list');
   const [selectedId, setSelectedId] = useState(null);
   const [editId, setEditId] = useState(null);
+  const [syncStatus, setSyncStatus] = useState('loading');
 
+  const saveTimer = useRef(null);
+  const isMounted = useRef(false);
+
+  // On mount: fetch from DB, override localStorage if non-empty
   useEffect(() => {
+    fetch(API_URL, { headers: { 'X-Token': API_TOKEN } })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => {
+        const normalized = normalizeRecipes(data);
+        if (normalized) {
+          setRecipes(normalized);
+          localStorage.setItem('recipesData', JSON.stringify(normalized));
+        }
+        setSyncStatus('ok');
+        isMounted.current = true;
+      })
+      .catch(() => { setSyncStatus('offline'); isMounted.current = true; });
+  }, []);
+
+  // On change: save to localStorage immediately + debounced POST to DB
+  useEffect(() => {
+    if (!isMounted.current) return;
     localStorage.setItem('recipesData', JSON.stringify(recipes));
+    setSyncStatus('saving');
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Token': API_TOKEN },
+        body: JSON.stringify(recipes),
+      })
+        .then(() => setSyncStatus('ok'))
+        .catch(() => setSyncStatus('offline'));
+    }, 800);
   }, [recipes]);
 
   const selectedRecipe = recipes.find(r => r.id === selectedId) || null;
@@ -535,7 +574,7 @@ function App() {
       onDelete={deleteRecipe}
     />
   );
-  return <RecipeList recipes={recipes} onSelect={goDetail} onAdd={() => goForm(null)} />;
+  return <RecipeList recipes={recipes} onSelect={goDetail} onAdd={() => goForm(null)} syncStatus={syncStatus} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);

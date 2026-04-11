@@ -40,11 +40,17 @@ function addRecipeToListonic(listonicLists, ingredients, checkedMap, selectedSer
     });
   });
 }
+// Returns null for empty/invalid arrays so an empty API response never wipes localStorage data
+function normalizeRecipes(data) {
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return data;
+}
 if (typeof module !== 'undefined') {
   module.exports = {
     scaleQty,
     formatQty,
     buildListonicItems,
-    addRecipeToListonic
+    addRecipeToListonic,
+    normalizeRecipes
   };
 }

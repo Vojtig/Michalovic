@@ -53,3 +53,5 @@ jobs:
           **/STRUCTURE.md
           **/.gitignore
           **/shopping-list-app/**
+          **/*.jsx
+          **/docs/**
