@@ -135,7 +135,7 @@ function App() {
         <p className="subtitle">Čauko, tohle je naše rodinná stránka kde najdeš všechny naše užitečné aplikace</p>
       </header>
 
-      <a href="weather.html" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+      <a href="weather.html" style={{ textDecoration: 'none', color: 'inherit', display: 'inline-block' }}>
         <div className="weather-section weather-section--link">
           <h2>Počasí v Čáslavi <span className="weather-detail-hint">Podrobnosti →</span></h2>
           {loading && <p>Načítám data...</p>}

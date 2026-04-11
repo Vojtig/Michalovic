@@ -224,7 +224,7 @@ function App() {
     style: {
       textDecoration: 'none',
       color: 'inherit',
-      display: 'block'
+      display: 'inline-block'
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "weather-section weather-section--link"
