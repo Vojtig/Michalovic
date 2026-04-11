@@ -135,8 +135,9 @@ function App() {
         <p className="subtitle">Čauko, tohle je naše rodinná stránka kde najdeš všechny naše užitečné aplikace</p>
       </header>
 
-      <div className="weather-section">
-        <h2>Počasí v Čáslavi</h2>
+      <a href="weather.html" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+      <div className="weather-section weather-section--link">
+        <h2>Počasí v Čáslavi <span className="weather-detail-hint">Podrobnosti →</span></h2>
         {loading && <p>Načítám data...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {weather && (
@@ -161,6 +162,7 @@ function App() {
           </div>
         )}
       </div>
+      </a>
 
       <main className="main-content">
         <div className="category-filter">

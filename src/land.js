@@ -219,9 +219,18 @@ function App() {
     className: "title"
   }, "M\xEDchalovic"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "\u010Cauko, tohle je na\u0161e rodinn\xE1 str\xE1nka kde najde\u0161 v\u0161echny na\u0161e u\u017Eite\u010Dn\xE9 aplikace")), /*#__PURE__*/React.createElement("div", {
-    className: "weather-section"
-  }, /*#__PURE__*/React.createElement("h2", null, "Po\u010Das\xED v \u010C\xE1slavi"), loading && /*#__PURE__*/React.createElement("p", null, "Na\u010D\xEDt\xE1m data..."), error && /*#__PURE__*/React.createElement("p", {
+  }, "\u010Cauko, tohle je na\u0161e rodinn\xE1 str\xE1nka kde najde\u0161 v\u0161echny na\u0161e u\u017Eite\u010Dn\xE9 aplikace")), /*#__PURE__*/React.createElement("a", {
+    href: "weather.html",
+    style: {
+      textDecoration: 'none',
+      color: 'inherit',
+      display: 'block'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "weather-section weather-section--link"
+  }, /*#__PURE__*/React.createElement("h2", null, "Po\u010Das\xED v \u010C\xE1slavi ", /*#__PURE__*/React.createElement("span", {
+    className: "weather-detail-hint"
+  }, "Podrobnosti \u2192")), loading && /*#__PURE__*/React.createElement("p", null, "Na\u010D\xEDt\xE1m data..."), error && /*#__PURE__*/React.createElement("p", {
     style: {
       color: 'red'
     }
@@ -241,7 +250,7 @@ function App() {
     className: "chart-wrapper"
   }, /*#__PURE__*/React.createElement("canvas", {
     ref: chartRef
-  })))), /*#__PURE__*/React.createElement("main", {
+  }))))), /*#__PURE__*/React.createElement("main", {
     className: "main-content"
   }, /*#__PURE__*/React.createElement("div", {
     className: "category-filter"

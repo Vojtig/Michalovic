@@ -1752,4 +1752,15 @@ body {
   color: #999;
   font-size: 1rem;
 }
+
+/* Weather section — clickable link */
+.weather-section--link { cursor: pointer; transition: box-shadow 0.2s, transform 0.2s; }
+.weather-section--link:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.12); transform: translateY(-2px); }
+.weather-detail-hint {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2575fc;
+  vertical-align: middle;
+  margin-left: 8px;
+}
 .wx-error { color: #e74c3c; }
