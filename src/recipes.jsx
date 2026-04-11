@@ -501,15 +501,17 @@ function App() {
 
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
+  const skipNextSave = useRef(false);
 
   // On mount: fetch from DB, override localStorage if non-empty;
   // if DB is empty but localStorage has data, push it up to DB now.
   useEffect(() => {
-    fetch(API_URL, { headers: { 'X-Token': API_TOKEN }, cache: 'no-store' })
+    fetch(API_URL + '?_=' + Date.now(), { headers: { 'X-Token': API_TOKEN }, cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(data => {
         const normalized = normalizeRecipes(data);
         if (normalized) {
+          skipNextSave.current = true;  // data came FROM DB — don't write it back
           setRecipes(normalized);
           localStorage.setItem('recipesData', JSON.stringify(normalized));
           isMounted.current = true;
@@ -538,6 +540,7 @@ function App() {
   // On change: save to localStorage immediately + debounced POST to DB
   useEffect(() => {
     if (!isMounted.current) return;
+    if (skipNextSave.current) { skipNextSave.current = false; return; }
     localStorage.setItem('recipesData', JSON.stringify(recipes));
     setSyncStatus('saving');
     clearTimeout(saveTimer.current);
