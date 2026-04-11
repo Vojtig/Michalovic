@@ -73,9 +73,9 @@ function CurrentWeather({
 function HourlyStrip({
   hourly
 }) {
-  const now = new Date().getHours();
-  // Show 24 hours starting from current hour
-  const start = now;
+  const nowIso = new Date().toISOString().slice(0, 13);
+  const found = hourly.time.findIndex(t => t.startsWith(nowIso));
+  const start = found === -1 ? 0 : found;
   const end = Math.min(start + 24, hourly.time.length);
   const hours = hourly.time.slice(start, end).map((t, i) => ({
     time: fmtHour(t),
@@ -160,7 +160,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   useEffect(() => {
-    fetch('https://api.open-meteo.com/v1/forecast' + '?latitude=' + LAT + '&longitude=' + LON + '&current=temperature_2m,apparent_temperature,weather_code,' + 'relative_humidity_2m,wind_speed_10m,wind_direction_10m,' + 'wind_gusts_10m,surface_pressure,precipitation' + '&hourly=temperature_2m,precipitation_probability,weather_code' + '&daily=temperature_2m_max,temperature_2m_min,weather_code,' + 'precipitation_sum,precipitation_probability_max' + '&timezone=Europe%2FPrague&forecast_days=7').then(r => r.json()).then(d => {
+    fetch('https://api.open-meteo.com/v1/forecast' + '?latitude=' + LAT + '&longitude=' + LON + '&current=temperature_2m,apparent_temperature,weather_code,' + 'relative_humidity_2m,wind_speed_10m,wind_direction_10m,' + 'wind_gusts_10m,surface_pressure,precipitation' + '&hourly=temperature_2m,precipitation_probability,weather_code' + '&daily=temperature_2m_max,temperature_2m_min,weather_code,' + 'precipitation_sum,precipitation_probability_max' + '&timezone=Europe%2FPrague&forecast_days=7').then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(d => {
       setData(d);
       setLoading(false);
     }).catch(e => {

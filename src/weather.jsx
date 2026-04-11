@@ -51,9 +51,9 @@ function CurrentWeather({ current }) {
 
 // ── HourlyStrip ─────────────────────────────────────────────
 function HourlyStrip({ hourly }) {
-  const now = new Date().getHours();
-  // Show 24 hours starting from current hour
-  const start = now;
+  const nowIso = new Date().toISOString().slice(0, 13);
+  const found = hourly.time.findIndex(t => t.startsWith(nowIso));
+  const start = found === -1 ? 0 : found;
   const end = Math.min(start + 24, hourly.time.length);
   const hours = hourly.time.slice(start, end).map((t, i) => ({
     time: fmtHour(t),
@@ -146,7 +146,7 @@ function App() {
         'precipitation_sum,precipitation_probability_max' +
       '&timezone=Europe%2FPrague&forecast_days=7'
     )
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(d => { setData(d); setLoading(false); })
       .catch(e => { setError('Nepodařilo se načíst data'); setLoading(false); });
   }, []);
