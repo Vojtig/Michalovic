@@ -314,12 +314,11 @@ function AddToListModal({ ingredients, servings, baseServings, onClose }) {
 // ── RecipeDetail ────────────────────────────────────────────────────────────
 function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
   const [servings, setServings] = useState(recipe ? recipe.servings || 1 : 1);
-  const [checkedMap, setCheckedMap] = useState({});
-  const [toast, setToast] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     if (recipe) setServings(recipe.servings || 1);
-    setCheckedMap({});
+    setShowAddModal(false);
   }, [recipe ? recipe.id : null]);
 
   if (!recipe) {
@@ -335,25 +334,6 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
   }
 
   const baseServings = recipe.servings || 1;
-
-  const toggleIng = name => {
-    setCheckedMap(prev => ({ ...prev, [name]: prev[name] === false ? true : false }));
-  };
-
-  const isChecked = name => checkedMap[name] !== false;
-
-  const handleAddToListonic = () => {
-    try {
-      const lists = JSON.parse(localStorage.getItem('listonicLists')) || [];
-      const updated = addRecipeToListonic(lists, recipe.ingredients || [], checkedMap, servings, baseServings);
-      localStorage.setItem('listonicLists', JSON.stringify(updated));
-      setToast('Přidáno do seznamu ✓');
-      setTimeout(() => setToast(''), 2500);
-    } catch (e) {
-      setToast('Chyba při přidávání');
-      setTimeout(() => setToast(''), 2500);
-    }
-  };
 
   const handleDelete = () => {
     if (window.confirm(`Smazat recept "${recipe.title}"?`)) {
@@ -384,20 +364,17 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
         <>
           <div className="rc-dcard-title" style={{marginTop:'14px'}}>Ingredience</div>
           {recipe.ingredients.map((ing, i) => {
-            const checked = isChecked(ing.name);
             const scaled = scaleQty(ing.qty, baseServings, servings);
-            const display = formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '');
+            const display = (formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '')).trim();
             return (
-              <div key={i} className={'rc-ing-row' + (checked ? '' : ' unchecked')}>
-                <input type="checkbox" checked={checked} onChange={() => toggleIng(ing.name)} />
+              <div key={i} className="rc-ing-row">
                 <span className="rc-ing-name">{ing.name}</span>
-                {display.trim() && <span className="rc-ing-qty">{display.trim()}</span>}
+                {display && <span className="rc-ing-qty">{display}</span>}
               </div>
             );
           })}
           <div>
-            <button className="rc-add-list-btn" onClick={handleAddToListonic}>🛒 Přidat do seznamu</button>
-            {toast && <div className="rc-toast">{toast}</div>}
+            <button className="rc-add-list-btn" onClick={() => setShowAddModal(true)}>🛒 Přidat do seznamu</button>
           </div>
         </>
       )}
@@ -465,6 +442,14 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
           {DeleteSection}
         </div>
       </div>
+      {showAddModal && (
+        <AddToListModal
+          ingredients={recipe.ingredients || []}
+          servings={servings}
+          baseServings={baseServings}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
     </div>
   );
 }
