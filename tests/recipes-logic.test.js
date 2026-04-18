@@ -6,6 +6,7 @@ const {
   buildListonicItems,
   addRecipeToListonic,
   normalizeRecipes,
+  addItemsToListById,
 } = require('../src/recipes-logic.js');
 
 // ===== scaleQty =====
@@ -156,5 +157,45 @@ describe('normalizeRecipes', () => {
   test('handles multiple recipes', () => {
     const recipes = [{ id: 1 }, { id: 2 }, { id: 3 }];
     expect(normalizeRecipes(recipes)).toHaveLength(3);
+  });
+});
+
+// ===== addItemsToListById =====
+describe('addItemsToListById', () => {
+  const makeList = (id, name, items = []) => ({ id, name, items });
+  const newItems = [{ id: 99, name: 'Mléko', qty: '1', unit: 'l', checked: false }];
+
+  test('appends items to the matching list', () => {
+    const lists = [makeList(1, 'Nákup'), makeList(2, 'Drogérie')];
+    const result = addItemsToListById(lists, 1, newItems);
+    expect(result[0].items).toHaveLength(1);
+    expect(result[0].items[0].name).toBe('Mléko');
+  });
+
+  test('does not touch other lists', () => {
+    const lists = [makeList(1, 'Nákup'), makeList(2, 'Drogérie', [{ id: 5, name: 'Šampon' }])];
+    const result = addItemsToListById(lists, 1, newItems);
+    expect(result[1].items).toHaveLength(1);
+    expect(result[1].items[0].name).toBe('Šampon');
+  });
+
+  test('appends to existing items, does not replace', () => {
+    const lists = [makeList(1, 'Nákup', [{ id: 10, name: 'Cibule' }])];
+    const result = addItemsToListById(lists, 1, newItems);
+    expect(result[0].items).toHaveLength(2);
+    expect(result[0].items[0].name).toBe('Cibule');
+    expect(result[0].items[1].name).toBe('Mléko');
+  });
+
+  test('returns unchanged lists if listId not found', () => {
+    const lists = [makeList(1, 'Nákup')];
+    const result = addItemsToListById(lists, 99, newItems);
+    expect(result[0].items).toHaveLength(0);
+  });
+
+  test('does not mutate original list', () => {
+    const lists = [makeList(1, 'Nákup')];
+    addItemsToListById(lists, 1, newItems);
+    expect(lists[0].items).toHaveLength(0);
   });
 });

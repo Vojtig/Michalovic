@@ -40,6 +40,12 @@ function addRecipeToListonic(listonicLists, ingredients, checkedMap, selectedSer
     });
   });
 }
+function addItemsToListById(lists, listId, items) {
+  return lists.map(function(list) {
+    if (list.id !== listId) return list;
+    return Object.assign({}, list, { items: list.items.concat(items) });
+  });
+}
 // Returns null for empty/invalid arrays so an empty API response never wipes localStorage data
 function normalizeRecipes(data) {
   if (!Array.isArray(data) || data.length === 0) return null;
@@ -51,6 +57,7 @@ if (typeof module !== 'undefined') {
     formatQty,
     buildListonicItems,
     addRecipeToListonic,
-    normalizeRecipes
+    normalizeRecipes,
+    addItemsToListById
   };
 }
