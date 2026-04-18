@@ -198,4 +198,9 @@ describe('addItemsToListById', () => {
     addItemsToListById(lists, 1, newItems);
     expect(lists[0].items).toHaveLength(0);
   });
+
+  test('returns empty array for null or empty lists', () => {
+    expect(addItemsToListById(null, 1, [])).toEqual([]);
+    expect(addItemsToListById([], 1, [])).toEqual([]);
+  });
 });

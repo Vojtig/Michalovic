@@ -41,6 +41,7 @@ function addRecipeToListonic(listonicLists, ingredients, checkedMap, selectedSer
   });
 }
 function addItemsToListById(lists, listId, items) {
+  if (!lists || lists.length === 0) return [];
   return lists.map(function(list) {
     if (list.id !== listId) return list;
     return Object.assign({}, list, { items: list.items.concat(items) });
