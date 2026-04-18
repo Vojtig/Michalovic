@@ -174,7 +174,7 @@ function AddToListModal({ ingredients, servings, baseServings, onClose }) {
     if (!newListName.trim() || saving) return;
     const items = buildListonicItems(ingredients, checkedMap, servings, baseServings);
     const newList = { id: Date.now(), name: newListName.trim(), items };
-    saveLists([newList]);
+    saveLists([...lists, newList]);
   };
 
   const anyChecked = (ingredients || []).some(ing => checkedMap[ing.name] !== false);
@@ -245,7 +245,7 @@ function AddToListModal({ ingredients, servings, baseServings, onClose }) {
                 </div>
               )}
               {listsStatus === 'ok' && lists.length > 0 && (
-                <>
+                <div style={saving ? {pointerEvents: 'none', opacity: 0.7} : {}}>
                   {lists.map(list => (
                     <div
                       key={list.id}
@@ -257,7 +257,7 @@ function AddToListModal({ ingredients, servings, baseServings, onClose }) {
                     </div>
                   ))}
                   {saveError && <div className="rc-toast" style={{marginTop:'12px',display:'block'}}>{saveError}</div>}
-                </>
+                </div>
               )}
             </div>
           </>
@@ -276,7 +276,7 @@ function AddToListModal({ ingredients, servings, baseServings, onClose }) {
                 placeholder="Název seznamu..."
                 value={newListName}
                 onChange={e => setNewListName(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && handleCreateList()}
+                onKeyDown={e => e.key === 'Enter' && handleCreateList()}
                 autoFocus
               />
               {saveError && <div className="rc-toast" style={{marginTop:'10px',display:'block'}}>{saveError}</div>}

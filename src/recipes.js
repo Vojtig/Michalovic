@@ -171,7 +171,7 @@ function AddToListModal({
       name: newListName.trim(),
       items
     };
-    saveLists([newList]);
+    saveLists([...lists, newList]);
   };
   const anyChecked = (ingredients || []).some(ing => checkedMap[ing.name] !== false);
   return /*#__PURE__*/React.createElement("div", {
@@ -243,7 +243,12 @@ function AddToListModal({
   }, "Ano"), /*#__PURE__*/React.createElement("button", {
     className: "rc-delete-btn",
     onClick: onClose
-  }, "Ne"))), listsStatus === 'ok' && lists.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, lists.map(list => /*#__PURE__*/React.createElement("div", {
+  }, "Ne"))), listsStatus === 'ok' && lists.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: saving ? {
+      pointerEvents: 'none',
+      opacity: 0.7
+    } : {}
+  }, lists.map(list => /*#__PURE__*/React.createElement("div", {
     key: list.id,
     className: "rc-modal-list-row",
     onClick: () => handleAddToList(list.id)
@@ -269,7 +274,7 @@ function AddToListModal({
     placeholder: "N\xE1zev seznamu...",
     value: newListName,
     onChange: e => setNewListName(e.target.value),
-    onKeyPress: e => e.key === 'Enter' && handleCreateList(),
+    onKeyDown: e => e.key === 'Enter' && handleCreateList(),
     autoFocus: true
   }), saveError && /*#__PURE__*/React.createElement("div", {
     className: "rc-toast",
