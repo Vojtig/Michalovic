@@ -159,8 +159,8 @@ function AddToListModal({ ingredients, servings, baseServings, onClose }) {
   };
 
   const handleContinue = () => {
-    fetchLists();
     setStep('lists');
+    fetchLists();
   };
 
   const handleAddToList = (listId) => {
