@@ -4,6 +4,7 @@ const {
   useRef
 } = React;
 const API_URL = 'api/recipes.php';
+const LISTS_API_URL = 'api/lists.php';
 const API_TOKEN = 'mic-9kX4mW2pR7vL8j';
 const UNITS = ['', 'ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
 const CATEGORIES = ['Polévky', 'Hlavní jídla', 'Dezerty', 'Přílohy', 'Snídaně', 'Ostatní'];
@@ -94,6 +95,208 @@ function RecipeList({
   }, r.difficulty)), /*#__PURE__*/React.createElement("span", {
     className: "rc-card-arrow"
   }, "\u203A"))))));
+}
+
+// ── AddToListModal ──────────────────────────────────────────────────────────
+function AddToListModal({
+  ingredients,
+  servings,
+  baseServings,
+  onClose
+}) {
+  const [step, setStep] = useState('ingredients');
+  const [checkedMap, setCheckedMap] = useState(() => {
+    const m = {};
+    (ingredients || []).forEach(ing => {
+      m[ing.name] = true;
+    });
+    return m;
+  });
+  const [lists, setLists] = useState([]);
+  const [listsStatus, setListsStatus] = useState('idle');
+  const [newListName, setNewListName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const fetchLists = () => {
+    setListsStatus('loading');
+    fetch(LISTS_API_URL + '?_=' + Date.now(), {
+      headers: {
+        'X-Token': API_TOKEN
+      },
+      cache: 'no-store'
+    }).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(data => {
+      setLists(Array.isArray(data) ? data : []);
+      setListsStatus('ok');
+    }).catch(() => setListsStatus('error'));
+  };
+  const saveLists = updatedLists => {
+    setSaving(true);
+    setSaveError('');
+    fetch(LISTS_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Token': API_TOKEN
+      },
+      body: JSON.stringify(updatedLists)
+    }).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+    }).then(() => {
+      localStorage.setItem('listonicLists', JSON.stringify(updatedLists));
+      setSaving(false);
+      setStep('done');
+    }).catch(() => {
+      setSaving(false);
+      setSaveError('Chyba při ukládání. Zkuste znovu.');
+    });
+  };
+  const handleContinue = () => {
+    fetchLists();
+    setStep('lists');
+  };
+  const handleAddToList = listId => {
+    if (saving) return;
+    const items = buildListonicItems(ingredients, checkedMap, servings, baseServings);
+    const updatedLists = addItemsToListById(lists, listId, items);
+    saveLists(updatedLists);
+  };
+  const handleCreateList = () => {
+    if (!newListName.trim() || saving) return;
+    const items = buildListonicItems(ingredients, checkedMap, servings, baseServings);
+    const newList = {
+      id: Date.now(),
+      name: newListName.trim(),
+      items
+    };
+    saveLists([newList]);
+  };
+  const anyChecked = (ingredients || []).some(ing => checkedMap[ing.name] !== false);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal",
+    onClick: e => e.stopPropagation()
+  }, step === 'ingredients' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-header"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rc-modal-title"
+  }, "Vyberte ingredience"), /*#__PURE__*/React.createElement("button", {
+    className: "rc-modal-close",
+    onClick: onClose
+  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-body"
+  }, (ingredients || []).map((ing, i) => {
+    const checked = checkedMap[ing.name] !== false;
+    const scaled = scaleQty(ing.qty, baseServings, servings);
+    const display = (formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '')).trim();
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: 'rc-ing-row' + (checked ? '' : ' unchecked')
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: checked,
+      onChange: () => setCheckedMap(prev => ({
+        ...prev,
+        [ing.name]: !checked
+      }))
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "rc-ing-name"
+    }, ing.name), display && /*#__PURE__*/React.createElement("span", {
+      className: "rc-ing-qty"
+    }, display));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-footer"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-save-btn",
+    onClick: handleContinue,
+    disabled: !anyChecked
+  }, "Pokra\u010Dovat \u2192"))), step === 'lists' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-header"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rc-modal-title"
+  }, "Vyberte seznam"), /*#__PURE__*/React.createElement("button", {
+    className: "rc-modal-close",
+    onClick: onClose
+  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-body"
+  }, listsStatus === 'loading' && /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-status"
+  }, "\u27F3 Na\u010D\xEDt\xE1m seznamy..."), listsStatus === 'error' && /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-status"
+  }, /*#__PURE__*/React.createElement("p", null, "Nepoda\u0159ilo se na\u010D\xEDst seznamy."), /*#__PURE__*/React.createElement("button", {
+    className: "rc-add-row-btn",
+    style: {
+      marginTop: '12px'
+    },
+    onClick: fetchLists
+  }, "Zkusit znovu")), listsStatus === 'ok' && lists.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-status"
+  }, /*#__PURE__*/React.createElement("p", null, "Nem\xE1te \u017E\xE1dn\xE9 seznamy. Chcete vytvo\u0159it nov\xFD?"), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-save-btn",
+    onClick: () => setStep('new-list')
+  }, "Ano"), /*#__PURE__*/React.createElement("button", {
+    className: "rc-delete-btn",
+    onClick: onClose
+  }, "Ne"))), listsStatus === 'ok' && lists.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, lists.map(list => /*#__PURE__*/React.createElement("div", {
+    key: list.id,
+    className: "rc-modal-list-row",
+    onClick: () => handleAddToList(list.id)
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDED2 ", list.name), /*#__PURE__*/React.createElement("span", {
+    className: "rc-card-arrow"
+  }, saving ? '⟳' : '›'))), saveError && /*#__PURE__*/React.createElement("div", {
+    className: "rc-toast",
+    style: {
+      marginTop: '12px',
+      display: 'block'
+    }
+  }, saveError)))), step === 'new-list' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-header"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rc-modal-title"
+  }, "Nov\xFD seznam"), /*#__PURE__*/React.createElement("button", {
+    className: "rc-modal-close",
+    onClick: onClose
+  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-body"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "rc-input",
+    placeholder: "N\xE1zev seznamu...",
+    value: newListName,
+    onChange: e => setNewListName(e.target.value),
+    onKeyPress: e => e.key === 'Enter' && handleCreateList(),
+    autoFocus: true
+  }), saveError && /*#__PURE__*/React.createElement("div", {
+    className: "rc-toast",
+    style: {
+      marginTop: '10px',
+      display: 'block'
+    }
+  }, saveError)), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-footer"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-save-btn",
+    onClick: handleCreateList,
+    disabled: !newListName.trim() || saving
+  }, saving ? '⟳ Ukládám...' : 'Vytvořit a přidat'))), step === 'done' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-header"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rc-modal-title"
+  }, "Hotovo")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-done"
+  }, "\u2713 P\u0159id\xE1no do seznamu")), /*#__PURE__*/React.createElement("div", {
+    className: "rc-modal-footer"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rc-save-btn",
+    onClick: onClose
+  }, "OK")))));
 }
 
 // ── RecipeDetail ────────────────────────────────────────────────────────────

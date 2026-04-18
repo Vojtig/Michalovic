@@ -1,6 +1,7 @@
 const { useState, useEffect, useRef } = React;
 
 const API_URL = 'api/recipes.php';
+const LISTS_API_URL = 'api/lists.php';
 const API_TOKEN = 'mic-9kX4mW2pR7vL8j';
 
 const UNITS = ['', 'ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
@@ -104,6 +105,207 @@ function RecipeList({ recipes, onSelect, onAdd, syncStatus }) {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── AddToListModal ──────────────────────────────────────────────────────────
+function AddToListModal({ ingredients, servings, baseServings, onClose }) {
+  const [step, setStep] = useState('ingredients');
+  const [checkedMap, setCheckedMap] = useState(() => {
+    const m = {};
+    (ingredients || []).forEach(ing => { m[ing.name] = true; });
+    return m;
+  });
+  const [lists, setLists] = useState([]);
+  const [listsStatus, setListsStatus] = useState('idle');
+  const [newListName, setNewListName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
+  const fetchLists = () => {
+    setListsStatus('loading');
+    fetch(LISTS_API_URL + '?_=' + Date.now(), {
+      headers: { 'X-Token': API_TOKEN },
+      cache: 'no-store',
+    })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => {
+        setLists(Array.isArray(data) ? data : []);
+        setListsStatus('ok');
+      })
+      .catch(() => setListsStatus('error'));
+  };
+
+  const saveLists = (updatedLists) => {
+    setSaving(true);
+    setSaveError('');
+    fetch(LISTS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Token': API_TOKEN },
+      body: JSON.stringify(updatedLists),
+    })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); })
+      .then(() => {
+        localStorage.setItem('listonicLists', JSON.stringify(updatedLists));
+        setSaving(false);
+        setStep('done');
+      })
+      .catch(() => {
+        setSaving(false);
+        setSaveError('Chyba při ukládání. Zkuste znovu.');
+      });
+  };
+
+  const handleContinue = () => {
+    fetchLists();
+    setStep('lists');
+  };
+
+  const handleAddToList = (listId) => {
+    if (saving) return;
+    const items = buildListonicItems(ingredients, checkedMap, servings, baseServings);
+    const updatedLists = addItemsToListById(lists, listId, items);
+    saveLists(updatedLists);
+  };
+
+  const handleCreateList = () => {
+    if (!newListName.trim() || saving) return;
+    const items = buildListonicItems(ingredients, checkedMap, servings, baseServings);
+    const newList = { id: Date.now(), name: newListName.trim(), items };
+    saveLists([newList]);
+  };
+
+  const anyChecked = (ingredients || []).some(ing => checkedMap[ing.name] !== false);
+
+  return (
+    <div className="rc-modal-overlay" onClick={onClose}>
+      <div className="rc-modal" onClick={e => e.stopPropagation()}>
+
+        {/* ── Krok 1: Výběr ingrediencí ── */}
+        {step === 'ingredients' && (
+          <>
+            <div className="rc-modal-header">
+              <span className="rc-modal-title">Vyberte ingredience</span>
+              <button className="rc-modal-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="rc-modal-body">
+              {(ingredients || []).map((ing, i) => {
+                const checked = checkedMap[ing.name] !== false;
+                const scaled = scaleQty(ing.qty, baseServings, servings);
+                const display = (formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '')).trim();
+                return (
+                  <div key={i} className={'rc-ing-row' + (checked ? '' : ' unchecked')}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => setCheckedMap(prev => ({ ...prev, [ing.name]: !checked }))}
+                    />
+                    <span className="rc-ing-name">{ing.name}</span>
+                    {display && <span className="rc-ing-qty">{display}</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="rc-modal-footer">
+              <button
+                className="rc-save-btn"
+                onClick={handleContinue}
+                disabled={!anyChecked}
+              >Pokračovat →</button>
+            </div>
+          </>
+        )}
+
+        {/* ── Krok 2: Výběr seznamu ── */}
+        {step === 'lists' && (
+          <>
+            <div className="rc-modal-header">
+              <span className="rc-modal-title">Vyberte seznam</span>
+              <button className="rc-modal-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="rc-modal-body">
+              {listsStatus === 'loading' && (
+                <div className="rc-modal-status">⟳ Načítám seznamy...</div>
+              )}
+              {listsStatus === 'error' && (
+                <div className="rc-modal-status">
+                  <p>Nepodařilo se načíst seznamy.</p>
+                  <button className="rc-add-row-btn" style={{marginTop:'12px'}} onClick={fetchLists}>Zkusit znovu</button>
+                </div>
+              )}
+              {listsStatus === 'ok' && lists.length === 0 && (
+                <div className="rc-modal-status">
+                  <p>Nemáte žádné seznamy. Chcete vytvořit nový?</p>
+                  <div className="rc-modal-actions">
+                    <button className="rc-save-btn" onClick={() => setStep('new-list')}>Ano</button>
+                    <button className="rc-delete-btn" onClick={onClose}>Ne</button>
+                  </div>
+                </div>
+              )}
+              {listsStatus === 'ok' && lists.length > 0 && (
+                <>
+                  {lists.map(list => (
+                    <div
+                      key={list.id}
+                      className="rc-modal-list-row"
+                      onClick={() => handleAddToList(list.id)}
+                    >
+                      <span>🛒 {list.name}</span>
+                      <span className="rc-card-arrow">{saving ? '⟳' : '›'}</span>
+                    </div>
+                  ))}
+                  {saveError && <div className="rc-toast" style={{marginTop:'12px',display:'block'}}>{saveError}</div>}
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── Krok 3: Nový seznam ── */}
+        {step === 'new-list' && (
+          <>
+            <div className="rc-modal-header">
+              <span className="rc-modal-title">Nový seznam</span>
+              <button className="rc-modal-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="rc-modal-body">
+              <input
+                className="rc-input"
+                placeholder="Název seznamu..."
+                value={newListName}
+                onChange={e => setNewListName(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && handleCreateList()}
+                autoFocus
+              />
+              {saveError && <div className="rc-toast" style={{marginTop:'10px',display:'block'}}>{saveError}</div>}
+            </div>
+            <div className="rc-modal-footer">
+              <button
+                className="rc-save-btn"
+                onClick={handleCreateList}
+                disabled={!newListName.trim() || saving}
+              >{saving ? '⟳ Ukládám...' : 'Vytvořit a přidat'}</button>
+            </div>
+          </>
+        )}
+
+        {/* ── Hotovo ── */}
+        {step === 'done' && (
+          <>
+            <div className="rc-modal-header">
+              <span className="rc-modal-title">Hotovo</span>
+            </div>
+            <div className="rc-modal-body">
+              <div className="rc-modal-done">✓ Přidáno do seznamu</div>
+            </div>
+            <div className="rc-modal-footer">
+              <button className="rc-save-btn" onClick={onClose}>OK</button>
+            </div>
+          </>
+        )}
+
       </div>
     </div>
   );
