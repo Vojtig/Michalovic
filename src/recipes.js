@@ -312,11 +312,10 @@ function RecipeDetail({
   onDelete
 }) {
   const [servings, setServings] = useState(recipe ? recipe.servings || 1 : 1);
-  const [checkedMap, setCheckedMap] = useState({});
-  const [toast, setToast] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
   useEffect(() => {
     if (recipe) setServings(recipe.servings || 1);
-    setCheckedMap({});
+    setShowAddModal(false);
   }, [recipe ? recipe.id : null]);
   if (!recipe) {
     return /*#__PURE__*/React.createElement("div", {
@@ -339,25 +338,6 @@ function RecipeDetail({
     }, "Tento recept neexistuje.")));
   }
   const baseServings = recipe.servings || 1;
-  const toggleIng = name => {
-    setCheckedMap(prev => ({
-      ...prev,
-      [name]: prev[name] === false ? true : false
-    }));
-  };
-  const isChecked = name => checkedMap[name] !== false;
-  const handleAddToListonic = () => {
-    try {
-      const lists = JSON.parse(localStorage.getItem('listonicLists')) || [];
-      const updated = addRecipeToListonic(lists, recipe.ingredients || [], checkedMap, servings, baseServings);
-      localStorage.setItem('listonicLists', JSON.stringify(updated));
-      setToast('Přidáno do seznamu ✓');
-      setTimeout(() => setToast(''), 2500);
-    } catch (e) {
-      setToast('Chyba při přidávání');
-      setTimeout(() => setToast(''), 2500);
-    }
-  };
   const handleDelete = () => {
     if (window.confirm(`Smazat recept "${recipe.title}"?`)) {
       onDelete(recipe.id);
@@ -402,27 +382,20 @@ function RecipeDetail({
       marginTop: '14px'
     }
   }, "Ingredience"), recipe.ingredients.map((ing, i) => {
-    const checked = isChecked(ing.name);
     const scaled = scaleQty(ing.qty, baseServings, servings);
-    const display = formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '');
+    const display = (formatQty(scaled) + (ing.unit ? ' ' + ing.unit : '')).trim();
     return /*#__PURE__*/React.createElement("div", {
       key: i,
-      className: 'rc-ing-row' + (checked ? '' : ' unchecked')
-    }, /*#__PURE__*/React.createElement("input", {
-      type: "checkbox",
-      checked: checked,
-      onChange: () => toggleIng(ing.name)
-    }), /*#__PURE__*/React.createElement("span", {
+      className: "rc-ing-row"
+    }, /*#__PURE__*/React.createElement("span", {
       className: "rc-ing-name"
-    }, ing.name), display.trim() && /*#__PURE__*/React.createElement("span", {
+    }, ing.name), display && /*#__PURE__*/React.createElement("span", {
       className: "rc-ing-qty"
-    }, display.trim()));
+    }, display));
   }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
     className: "rc-add-list-btn",
-    onClick: handleAddToListonic
-  }, "\uD83D\uDED2 P\u0159idat do seznamu"), toast && /*#__PURE__*/React.createElement("div", {
-    className: "rc-toast"
-  }, toast))));
+    onClick: () => setShowAddModal(true)
+  }, "\uD83D\uDED2 P\u0159idat do seznamu"))));
   const StepsSection = (recipe.steps || []).length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "rc-dcard"
   }, /*#__PURE__*/React.createElement("div", {
@@ -485,7 +458,12 @@ function RecipeDetail({
     className: "rc-mi-val"
   }, m.val))))), /*#__PURE__*/React.createElement("div", {
     className: "rc-detail-grid"
-  }, /*#__PURE__*/React.createElement("div", null, IngredientSection), /*#__PURE__*/React.createElement("div", null, StepsSection, NotesSection)), DeleteSection)));
+  }, /*#__PURE__*/React.createElement("div", null, IngredientSection), /*#__PURE__*/React.createElement("div", null, StepsSection, NotesSection)), DeleteSection)), showAddModal && /*#__PURE__*/React.createElement(AddToListModal, {
+    ingredients: recipe.ingredients || [],
+    servings: servings,
+    baseServings: baseServings,
+    onClose: () => setShowAddModal(false)
+  }));
 }
 
 // ── RecipeForm ──────────────────────────────────────────────────────────────

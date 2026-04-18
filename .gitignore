@@ -4,4 +4,4 @@ coverage/
 .ssh/
 .claude/
 .superpowers/
-shopping-list-app/
+tests/
