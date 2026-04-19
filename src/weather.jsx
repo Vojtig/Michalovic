@@ -160,10 +160,12 @@ function ForecastRadar() {
     fetch('https://api.rainviewer.com/public/weather-maps.json')
       .then(r => r.json())
       .then(data => {
+        if (!data?.radar || !data?.host) throw new Error('no radar');
         const frames = [
           ...(data.radar.past || []),
           ...(data.radar.nowcast || []),
         ];
+        if (!frames.length) throw new Error('no frames');
         layersRef.current = frames.map((frame, i) =>
           L.tileLayer(
             data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png',
@@ -211,7 +213,7 @@ function ForecastRadar() {
           {playing ? '⏸ Pauza' : '▶ Přehrát'}
         </button>
         <div ref={mapDivRef} className="wx-forecast-radar-map" />
-        <div className="wx-radar-legend">← Historie (2h) &nbsp;|&nbsp; Předpověď (2h) → | © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
+        <div className="wx-radar-legend">← Historie (2h) &nbsp;|&nbsp; Předpověď (2h) → | © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></div>
       </div>
     </div>
   );

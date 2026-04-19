@@ -184,7 +184,9 @@ function ForecastRadar() {
       layers[idxRef.current].setOpacity(0.7);
     };
     fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).then(data => {
+      if (!data?.radar || !data?.host) throw new Error('no radar');
       const frames = [...(data.radar.past || []), ...(data.radar.nowcast || [])];
+      if (!frames.length) throw new Error('no frames');
       layersRef.current = frames.map((frame, i) => L.tileLayer(data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png', {
         opacity: i === 0 ? 0.7 : 0,
         tileSize: 256
@@ -235,7 +237,7 @@ function ForecastRadar() {
   }, "\u2190 Historie (2h) \xA0|\xA0 P\u0159edpov\u011B\u010F (2h) \u2192 | \xA9 ", /*#__PURE__*/React.createElement("a", {
     href: "https://www.openstreetmap.org/copyright",
     target: "_blank",
-    rel: "noopener"
+    rel: "noopener noreferrer"
   }, "OpenStreetMap"))));
 }
 
