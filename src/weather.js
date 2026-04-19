@@ -162,6 +162,7 @@ function ForecastRadar() {
   const layersRef = useRef([]);
   const idxRef = useRef(0);
   const animateRef = useRef(null);
+  const playingRef = useRef(true);
   const [error, setError] = useState(false);
   const [playing, setPlaying] = useState(true);
   useEffect(() => {
@@ -188,7 +189,9 @@ function ForecastRadar() {
         opacity: i === 0 ? 0.7 : 0,
         tileSize: 256
       }).addTo(map));
-      intervalRef.current = setInterval(animateRef.current, 500);
+      if (playingRef.current) {
+        intervalRef.current = setInterval(animateRef.current, 500);
+      }
     }).catch(() => setError(true));
     return () => {
       clearInterval(intervalRef.current);
@@ -197,13 +200,15 @@ function ForecastRadar() {
   }, []);
   const togglePlay = () => {
     setPlaying(p => {
-      if (p) {
+      const next = !p;
+      playingRef.current = next;
+      if (!next) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
-      } else {
+      } else if (layersRef.current.length) {
         intervalRef.current = setInterval(animateRef.current, 500);
       }
-      return !p;
+      return next;
     });
   };
   if (error) return /*#__PURE__*/React.createElement("div", {
@@ -227,7 +232,11 @@ function ForecastRadar() {
     className: "wx-forecast-radar-map"
   }), /*#__PURE__*/React.createElement("div", {
     className: "wx-radar-legend"
-  }, "\u2190 Historie (2h) \xA0|\xA0 P\u0159edpov\u011B\u010F (2h) \u2192")));
+  }, "\u2190 Historie (2h) \xA0|\xA0 P\u0159edpov\u011B\u010F (2h) \u2192 | \xA9 ", /*#__PURE__*/React.createElement("a", {
+    href: "https://www.openstreetmap.org/copyright",
+    target: "_blank",
+    rel: "noopener"
+  }, "OpenStreetMap"))));
 }
 
 // ── App ──────────────────────────────────────────────────────

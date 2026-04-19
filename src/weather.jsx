@@ -135,6 +135,7 @@ function ForecastRadar() {
   const layersRef = useRef([]);
   const idxRef = useRef(0);
   const animateRef = useRef(null);
+  const playingRef = useRef(true);
   const [error, setError] = useState(false);
   const [playing, setPlaying] = useState(true);
 
@@ -169,7 +170,9 @@ function ForecastRadar() {
             { opacity: i === 0 ? 0.7 : 0, tileSize: 256 }
           ).addTo(map)
         );
-        intervalRef.current = setInterval(animateRef.current, 500);
+        if (playingRef.current) {
+          intervalRef.current = setInterval(animateRef.current, 500);
+        }
       })
       .catch(() => setError(true));
 
@@ -181,13 +184,15 @@ function ForecastRadar() {
 
   const togglePlay = () => {
     setPlaying(p => {
-      if (p) {
+      const next = !p;
+      playingRef.current = next;
+      if (!next) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
-      } else {
+      } else if (layersRef.current.length) {
         intervalRef.current = setInterval(animateRef.current, 500);
       }
-      return !p;
+      return next;
     });
   };
 
@@ -206,7 +211,7 @@ function ForecastRadar() {
           {playing ? '⏸ Pauza' : '▶ Přehrát'}
         </button>
         <div ref={mapDivRef} className="wx-forecast-radar-map" />
-        <div className="wx-radar-legend">← Historie (2h) &nbsp;|&nbsp; Předpověď (2h) →</div>
+        <div className="wx-radar-legend">← Historie (2h) &nbsp;|&nbsp; Předpověď (2h) → | © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
       </div>
     </div>
   );
