@@ -139,22 +139,6 @@ function DailyForecast({
   }));
 }
 
-// ── RadarSection ─────────────────────────────────────────────
-function RadarSection() {
-  const src = 'https://embed.windy.com/embed2.html' + '?lat=49.75&lon=15.5' + '&detailLat=49.914&detailLon=15.389' + '&zoom=7&level=surface' + '&overlay=radar&product=radar' + '&menu=&message=&marker=&calendar=now&pressure=' + '&type=map&location=coordinates&detail=' + '&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1';
-  return /*#__PURE__*/React.createElement("div", {
-    className: "wx-section"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "wx-section-title"
-  }, "Radar sr\xE1\u017Eek"), /*#__PURE__*/React.createElement("div", {
-    className: "wx-radar"
-  }, /*#__PURE__*/React.createElement("iframe", {
-    src: src,
-    title: "Radar sr\xE1\u017Eek",
-    allowFullScreen: true
-  })));
-}
-
 // ── ForecastRadar ────────────────────────────────────────────
 function ForecastRadar() {
   const mapDivRef = useRef(null);
@@ -277,6 +261,6 @@ function App() {
     hourly: data.hourly
   }), /*#__PURE__*/React.createElement(DailyForecast, {
     daily: data.daily
-  }), /*#__PURE__*/React.createElement(RadarSection, null), /*#__PURE__*/React.createElement(ForecastRadar, null)));
+  }), /*#__PURE__*/React.createElement(ForecastRadar, null)));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));

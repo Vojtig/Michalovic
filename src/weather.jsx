@@ -106,28 +106,6 @@ function DailyForecast({ daily }) {
   );
 }
 
-// ── RadarSection ─────────────────────────────────────────────
-function RadarSection() {
-  const src =
-    'https://embed.windy.com/embed2.html' +
-    '?lat=49.75&lon=15.5' +
-    '&detailLat=49.914&detailLon=15.389' +
-    '&zoom=7&level=surface' +
-    '&overlay=radar&product=radar' +
-    '&menu=&message=&marker=&calendar=now&pressure=' +
-    '&type=map&location=coordinates&detail=' +
-    '&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1';
-
-  return (
-    <div className="wx-section">
-      <div className="wx-section-title">Radar srážek</div>
-      <div className="wx-radar">
-        <iframe src={src} title="Radar srážek" allowFullScreen />
-      </div>
-    </div>
-  );
-}
-
 // ── ForecastRadar ────────────────────────────────────────────
 function ForecastRadar() {
   const mapDivRef = useRef(null);
@@ -256,7 +234,6 @@ function App() {
           <CurrentWeather current={data.current} />
           <HourlyStrip    hourly={data.hourly} />
           <DailyForecast  daily={data.daily} />
-          <RadarSection />
           <ForecastRadar />
         </>
       )}
