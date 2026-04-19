@@ -1,4 +1,4 @@
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 
 const LAT = 49.914586;
 const LON = 15.388698;
@@ -128,6 +128,90 @@ function RadarSection() {
   );
 }
 
+// ── ForecastRadar ────────────────────────────────────────────
+function ForecastRadar() {
+  const mapDivRef = useRef(null);
+  const intervalRef = useRef(null);
+  const layersRef = useRef([]);
+  const idxRef = useRef(0);
+  const animateRef = useRef(null);
+  const [error, setError] = useState(false);
+  const [playing, setPlaying] = useState(true);
+
+  useEffect(() => {
+    if (typeof L === 'undefined') { setError(true); return; }
+
+    const map = L.map(mapDivRef.current, {
+      center: [49.9146, 15.3887],
+      zoom: 7,
+      attributionControl: false,
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    animateRef.current = () => {
+      const layers = layersRef.current;
+      if (!layers.length) return;
+      layers[idxRef.current].setOpacity(0);
+      idxRef.current = (idxRef.current + 1) % layers.length;
+      layers[idxRef.current].setOpacity(0.7);
+    };
+
+    fetch('https://api.rainviewer.com/public/weather-maps.json')
+      .then(r => r.json())
+      .then(data => {
+        const frames = [
+          ...(data.radar.past || []),
+          ...(data.radar.nowcast || []),
+        ];
+        layersRef.current = frames.map((frame, i) =>
+          L.tileLayer(
+            data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png',
+            { opacity: i === 0 ? 0.7 : 0, tileSize: 256 }
+          ).addTo(map)
+        );
+        intervalRef.current = setInterval(animateRef.current, 500);
+      })
+      .catch(() => setError(true));
+
+    return () => {
+      clearInterval(intervalRef.current);
+      map.remove();
+    };
+  }, []);
+
+  const togglePlay = () => {
+    setPlaying(p => {
+      if (p) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      } else {
+        intervalRef.current = setInterval(animateRef.current, 500);
+      }
+      return !p;
+    });
+  };
+
+  if (error) return (
+    <div className="wx-section">
+      <div className="wx-section-title">Předpověď srážek (radar)</div>
+      <div className="wx-loading">Radar není dostupný</div>
+    </div>
+  );
+
+  return (
+    <div className="wx-section">
+      <div className="wx-section-title">Předpověď srážek (radar)</div>
+      <div className="wx-forecast-radar">
+        <button className="wx-radar-btn" onClick={togglePlay}>
+          {playing ? '⏸ Pauza' : '▶ Přehrát'}
+        </button>
+        <div ref={mapDivRef} className="wx-forecast-radar-map" />
+        <div className="wx-radar-legend">← Historie (2h) &nbsp;|&nbsp; Předpověď (2h) →</div>
+      </div>
+    </div>
+  );
+}
+
 // ── App ──────────────────────────────────────────────────────
 function App() {
   const [data, setData] = useState(null);
@@ -166,6 +250,7 @@ function App() {
           <HourlyStrip    hourly={data.hourly} />
           <DailyForecast  daily={data.daily} />
           <RadarSection />
+          <ForecastRadar />
         </>
       )}
     </div>
