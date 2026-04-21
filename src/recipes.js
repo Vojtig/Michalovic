@@ -154,8 +154,8 @@ function AddToListModal({
     });
   };
   const handleContinue = () => {
-    fetchLists();
     setStep('lists');
+    fetchLists();
   };
   const handleAddToList = listId => {
     if (saving) return;
@@ -408,13 +408,26 @@ function RecipeDetail({
   }, i + 1), /*#__PURE__*/React.createElement("div", {
     className: "rc-step-text"
   }, step))));
+  const renderNotes = text => {
+    const parts = text.split(/(https?:\/\/[^\s]+)/);
+    return parts.map((part, i) => /^https?:\/\//.test(part) ? /*#__PURE__*/React.createElement("a", {
+      key: i,
+      href: part,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      className: "rc-notes-link"
+    }, part) : part);
+  };
   const NotesSection = recipe.notes && /*#__PURE__*/React.createElement("div", {
     className: "rc-dcard"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rc-dcard-title"
   }, "Pozn\xE1mky"), /*#__PURE__*/React.createElement("div", {
-    className: "rc-notes-text"
-  }, recipe.notes));
+    className: "rc-notes-text",
+    style: {
+      whiteSpace: 'pre-wrap'
+    }
+  }, renderNotes(recipe.notes)));
   const DeleteSection = /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center',

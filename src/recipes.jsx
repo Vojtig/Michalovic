@@ -393,10 +393,19 @@ function RecipeDetail({ recipe, onBack, onEdit, onDelete }) {
     </div>
   );
 
+  const renderNotes = (text) => {
+    const parts = text.split(/(https?:\/\/[^\s]+)/);
+    return parts.map((part, i) =>
+      /^https?:\/\//.test(part)
+        ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="rc-notes-link">{part}</a>
+        : part
+    );
+  };
+
   const NotesSection = recipe.notes && (
     <div className="rc-dcard">
       <div className="rc-dcard-title">Poznámky</div>
-      <div className="rc-notes-text">{recipe.notes}</div>
+      <div className="rc-notes-text" style={{whiteSpace: 'pre-wrap'}}>{renderNotes(recipe.notes)}</div>
     </div>
   );
 

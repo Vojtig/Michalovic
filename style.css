@@ -1451,6 +1451,7 @@ body {
 .rc-step-text { color: #444; font-size: 0.9rem; line-height: 1.6; }
 
 .rc-notes-text { font-size: 0.9rem; color: #666; line-height: 1.6; font-style: italic; }
+.rc-notes-link { color: #6a11cb; word-break: break-all; }
 
 /* Form */
 .rc-form {
