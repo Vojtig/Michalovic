@@ -857,19 +857,37 @@ function App() {
     setView('form');
   };
   const goList = () => setView('list');
-  const saveRecipe = recipe => {
+  const saveRecipe = async recipe => {
+    // Re-fetch to avoid overwriting recipes added externally (another device or script)
+    let baseRecipes = recipes;
+    try {
+      const res = await fetch(API_URL + '?_=' + Date.now(), {
+        headers: {
+          'X-Token': API_TOKEN
+        },
+        cache: 'no-store'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const fresh = normalizeRecipes(data);
+        if (fresh) baseRecipes = fresh;
+      }
+    } catch {}
+    let updated, newId;
     if (recipe.id) {
-      setRecipes(recipes.map(r => r.id === recipe.id ? recipe : r));
-      setSelectedId(recipe.id);
+      updated = baseRecipes.map(r => r.id === recipe.id ? recipe : r);
+      newId = recipe.id;
     } else {
       const n = {
         ...recipe,
         id: Date.now(),
         createdAt: Date.now()
       };
-      setRecipes(prev => [...prev, n]);
-      setSelectedId(n.id);
+      updated = [...baseRecipes, n];
+      newId = n.id;
     }
+    setRecipes(updated);
+    setSelectedId(newId);
     setView('detail');
   };
   const deleteRecipe = id => {
