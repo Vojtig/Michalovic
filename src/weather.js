@@ -74,7 +74,9 @@ function CurrentWeather({
 function HourlyStrip({
   hourly
 }) {
-  const nowIso = new Date().toISOString().slice(0, 13);
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const nowIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}`;
   const found = hourly.time.findIndex(t => t.startsWith(nowIso));
   const start = found === -1 ? 0 : found;
   const end = Math.min(start + 24, hourly.time.length);
