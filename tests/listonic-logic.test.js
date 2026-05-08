@@ -10,6 +10,7 @@ const {
   removeList,
   renameList,
   addToHistory,
+  mergeLists,
 } = require('../src/listonic-logic.js');
 
 // --- helpers ---
@@ -324,5 +325,91 @@ describe('addToHistory', () => {
     const result = addToHistory(history, 'nová');
     expect(result).toHaveLength(50);
     expect(result[0]).toBe('nová');
+  });
+});
+
+// ===== mergeLists =====
+describe('mergeLists', () => {
+  test('seznam jen na serveru se přidá lokálně', () => {
+    const local = [];
+    const server = [{ id: 1, name: 'Nákup', items: [], updatedAt: 100, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe(1);
+  });
+
+  test('seznam jen lokálně se zachová', () => {
+    const local = [{ id: 1, name: 'Lokální', items: [], updatedAt: 100, deleted: false }];
+    const server = [];
+    const result = mergeLists(local, server);
+    expect(result).toHaveLength(1);
+  });
+
+  test('metadata listu — vyšší updatedAt vyhrává (server novější)', () => {
+    const local =  [{ id: 1, name: 'Starý název', items: [], updatedAt: 100, deleted: false }];
+    const server = [{ id: 1, name: 'Nový název',  items: [], updatedAt: 200, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].name).toBe('Nový název');
+  });
+
+  test('metadata listu — vyšší updatedAt vyhrává (local novější)', () => {
+    const local =  [{ id: 1, name: 'Nový název', items: [], updatedAt: 200, deleted: false }];
+    const server = [{ id: 1, name: 'Starý název', items: [], updatedAt: 100, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].name).toBe('Nový název');
+  });
+
+  test('tombstone listu s novějším updatedAt přetrvá', () => {
+    const local =  [{ id: 1, name: 'A', items: [], updatedAt: 200, deleted: true }];
+    const server = [{ id: 1, name: 'A', items: [], updatedAt: 100, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].deleted).toBe(true);
+  });
+
+  test('serverový seznam s novějším updatedAt přepíše lokální tombstone', () => {
+    const local =  [{ id: 1, name: 'A', items: [], updatedAt: 100, deleted: true }];
+    const server = [{ id: 1, name: 'A', items: [], updatedAt: 200, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].deleted).toBe(false);
+  });
+
+  test('nová položka ze serveru se přidá do listu', () => {
+    const item = { id: 10, name: 'mléko', qty: '', unit: '', checked: false, updatedAt: 100, deleted: false };
+    const local  = [{ id: 1, name: 'N', items: [], updatedAt: 50, deleted: false }];
+    const server = [{ id: 1, name: 'N', items: [item], updatedAt: 50, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].items).toHaveLength(1);
+    expect(result[0].items[0].id).toBe(10);
+  });
+
+  test('lokálně smazaná položka (tombstone, novější) přetrvá', () => {
+    const localItem  = { id: 10, name: 'a', qty: '', unit: '', checked: false, updatedAt: 200, deleted: true };
+    const serverItem = { id: 10, name: 'a', qty: '', unit: '', checked: false, updatedAt: 100, deleted: false };
+    const local  = [{ id: 1, name: 'N', items: [localItem],  updatedAt: 50, deleted: false }];
+    const server = [{ id: 1, name: 'N', items: [serverItem], updatedAt: 50, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].items[0].deleted).toBe(true);
+  });
+
+  test('serverová verze položky s vyšším updatedAt přepíše lokální', () => {
+    const localItem  = { id: 10, name: 'a', qty: '', unit: '', checked: false, updatedAt: 100, deleted: false };
+    const serverItem = { id: 10, name: 'a', qty: '', unit: '', checked: true,  updatedAt: 200, deleted: false };
+    const local  = [{ id: 1, name: 'N', items: [localItem],  updatedAt: 50, deleted: false }];
+    const server = [{ id: 1, name: 'N', items: [serverItem], updatedAt: 50, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].items[0].checked).toBe(true);
+  });
+
+  test('lokální verze položky s vyšším updatedAt přetrvá', () => {
+    const localItem  = { id: 10, name: 'a', qty: '', unit: '', checked: true,  updatedAt: 200, deleted: false };
+    const serverItem = { id: 10, name: 'a', qty: '', unit: '', checked: false, updatedAt: 100, deleted: false };
+    const local  = [{ id: 1, name: 'N', items: [localItem],  updatedAt: 50, deleted: false }];
+    const server = [{ id: 1, name: 'N', items: [serverItem], updatedAt: 50, deleted: false }];
+    const result = mergeLists(local, server);
+    expect(result[0].items[0].checked).toBe(true);
+  });
+
+  test('prázdné vstupy vrátí prázdné pole', () => {
+    expect(mergeLists([], [])).toEqual([]);
   });
 });

@@ -94,6 +94,38 @@ function addToHistory(history, name) {
   if (!name || history.includes(name)) return history;
   return [name].concat(history).slice(0, 50);
 }
+function mergeLists(localLists, serverLists) {
+  var allIds = {};
+  localLists.forEach(function (l) { allIds[l.id] = true; });
+  serverLists.forEach(function (l) { allIds[l.id] = true; });
+
+  return Object.keys(allIds).map(function (id) {
+    var local  = localLists.find(function (l) { return String(l.id) === id; });
+    var server = serverLists.find(function (l) { return String(l.id) === id; });
+
+    if (!local)  return server;
+    if (!server) return local;
+
+    // List metadata: higher updatedAt wins
+    var winnerMeta = (local.updatedAt || 0) >= (server.updatedAt || 0) ? local : server;
+
+    // Merge items
+    var itemIds = {};
+    (local.items  || []).forEach(function (i) { itemIds[i.id] = true; });
+    (server.items || []).forEach(function (i) { itemIds[i.id] = true; });
+
+    var mergedItems = Object.keys(itemIds).map(function (itemId) {
+      var li = (local.items  || []).find(function (i) { return String(i.id) === itemId; });
+      var si = (server.items || []).find(function (i) { return String(i.id) === itemId; });
+      if (!li) return si;
+      if (!si) return li;
+      return (li.updatedAt || 0) >= (si.updatedAt || 0) ? li : si;
+    });
+
+    return Object.assign({}, winnerMeta, { items: mergedItems });
+  });
+}
+
 if (typeof module !== 'undefined') {
   module.exports = {
     getSuggestions: getSuggestions,
@@ -104,6 +136,7 @@ if (typeof module !== 'undefined') {
     createList: createList,
     removeList: removeList,
     renameList: renameList,
-    addToHistory: addToHistory
+    addToHistory: addToHistory,
+    mergeLists: mergeLists
   };
 }
