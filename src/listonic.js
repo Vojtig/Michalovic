@@ -107,7 +107,7 @@ function ListonicApp() {
   }, [syncStatus]);
   useEffect(() => {
     var doPoll = function () {
-      if (syncStatusRef.current === 'saving') return;
+      if (syncStatusRef.current === 'saving' || syncStatusRef.current === 'loading') return;
       fetch(API_URL, {
         headers: {
           'X-Token': API_TOKEN
@@ -247,8 +247,9 @@ function ListonicApp() {
     }, "Nov\xFD seznam")), /*#__PURE__*/React.createElement("div", {
       className: "lt-lists-grid"
     }, lists.filter(l => !l.deleted).map(list => {
-      const total = list.items.length;
-      const done = list.items.filter(i => i.checked).length;
+      const visibleItems = list.items.filter(i => !i.deleted);
+      const total = visibleItems.length;
+      const done = visibleItems.filter(i => i.checked).length;
       const pct = total > 0 ? Math.round(done / total * 100) : 0;
       const remaining = total - done;
       return /*#__PURE__*/React.createElement("div", {
