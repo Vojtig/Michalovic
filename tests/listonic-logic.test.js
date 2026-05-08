@@ -144,45 +144,65 @@ describe('toggleItemInList — timestamps', () => {
 
 // ===== deleteItemFromList =====
 describe('deleteItemFromList', () => {
-  test('smaže správnou položku', () => {
+  test('nastaví deleted: true na správnou položku', () => {
     const lists = [makeList(1, 'N', [makeItem(10, 'a'), makeItem(11, 'b')])];
     const result = deleteItemFromList(lists, 1, 10);
-    expect(result[0].items).toHaveLength(1);
-    expect(result[0].items[0].id).toBe(11);
+    const item10 = result[0].items.find(i => i.id === 10);
+    expect(item10.deleted).toBe(true);
   });
 
-  test('smazání jediné položky zanechá prázdný seznam', () => {
+  test('aktualizuje updatedAt smazané položky', () => {
+    const before = Date.now();
     const lists = [makeList(1, 'N', [makeItem(10, 'a')])];
     const result = deleteItemFromList(lists, 1, 10);
-    expect(result[0].items).toHaveLength(0);
+    expect(result[0].items[0].updatedAt).toBeGreaterThanOrEqual(before);
+  });
+
+  test('neovlivní ostatní položky', () => {
+    const lists = [makeList(1, 'N', [makeItem(10, 'a'), makeItem(11, 'b')])];
+    const result = deleteItemFromList(lists, 1, 10);
+    expect(result[0].items.find(i => i.id === 11).deleted).toBe(false);
   });
 
   test('neovlivní jiné seznamy', () => {
     const lists = [makeList(1, 'A', [makeItem(10, 'x')]), makeList(2, 'B', [makeItem(10, 'y')])];
     const result = deleteItemFromList(lists, 1, 10);
-    expect(result[1].items).toHaveLength(1);
+    expect(result[1].items[0].deleted).toBe(false);
   });
 });
 
 // ===== clearCheckedFromList =====
 describe('clearCheckedFromList', () => {
-  test('odstraní všechny zaškrtnuté položky', () => {
-    const lists = [makeList(1, 'N', [makeItem(1, 'a', true), makeItem(2, 'b', false), makeItem(3, 'c', true)])];
+  test('nastaví deleted: true na všechny zaškrtnuté', () => {
+    const lists = [makeList(1, 'N', [
+      makeItem(1, 'a', true),
+      makeItem(2, 'b', false),
+      makeItem(3, 'c', true)
+    ])];
     const result = clearCheckedFromList(lists, 1);
-    expect(result[0].items).toHaveLength(1);
-    expect(result[0].items[0].id).toBe(2);
+    expect(result[0].items.find(i => i.id === 1).deleted).toBe(true);
+    expect(result[0].items.find(i => i.id === 3).deleted).toBe(true);
   });
 
-  test('pokud nejsou zaškrtnuté, nic nesmaže', () => {
+  test('nezaškrtnuté položky zůstanou nezměněné', () => {
+    const lists = [makeList(1, 'N', [makeItem(1, 'a', true), makeItem(2, 'b', false)])];
+    const result = clearCheckedFromList(lists, 1);
+    expect(result[0].items.find(i => i.id === 2).deleted).toBe(false);
+  });
+
+  test('pokud nejsou zaškrtnuté, nic se nezmění', () => {
     const lists = [makeList(1, 'N', [makeItem(1, 'a'), makeItem(2, 'b')])];
     const result = clearCheckedFromList(lists, 1);
-    expect(result[0].items).toHaveLength(2);
+    expect(result[0].items.every(i => !i.deleted)).toBe(true);
   });
 
   test('neovlivní jiné seznamy', () => {
-    const lists = [makeList(1, 'A', [makeItem(1, 'x', true)]), makeList(2, 'B', [makeItem(2, 'y', true)])];
+    const lists = [
+      makeList(1, 'A', [makeItem(1, 'x', true)]),
+      makeList(2, 'B', [makeItem(2, 'y', true)])
+    ];
     const result = clearCheckedFromList(lists, 1);
-    expect(result[1].items).toHaveLength(1);
+    expect(result[1].items[0].deleted).toBe(false);
   });
 });
 
@@ -229,17 +249,29 @@ describe('createList — timestamps', () => {
 
 // ===== removeList =====
 describe('removeList', () => {
-  test('odstraní správný seznam', () => {
+  test('nastaví deleted: true na správný seznam', () => {
     const lists = [makeList(1, 'A'), makeList(2, 'B'), makeList(3, 'C')];
     const result = removeList(lists, 2);
-    expect(result).toHaveLength(2);
-    expect(result.find(l => l.id === 2)).toBeUndefined();
+    expect(result.find(l => l.id === 2).deleted).toBe(true);
+  });
+
+  test('aktualizuje updatedAt smazaného seznamu', () => {
+    const before = Date.now();
+    const lists = [makeList(1, 'A')];
+    const result = removeList(lists, 1);
+    expect(result[0].updatedAt).toBeGreaterThanOrEqual(before);
+  });
+
+  test('ostatní seznamy zůstanou nezměněné', () => {
+    const lists = [makeList(1, 'A'), makeList(2, 'B')];
+    const result = removeList(lists, 1);
+    expect(result.find(l => l.id === 2).deleted).toBe(false);
   });
 
   test('při neexistujícím id vrátí nezměněné pole', () => {
     const lists = [makeList(1, 'A')];
     const result = removeList(lists, 99);
-    expect(result).toHaveLength(1);
+    expect(result[0].deleted).toBe(false);
   });
 });
 

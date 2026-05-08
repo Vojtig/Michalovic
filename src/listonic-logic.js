@@ -40,8 +40,11 @@ function toggleItemInList(lists, activeListId, itemId) {
 function deleteItemFromList(lists, activeListId, itemId) {
   return lists.map(function (l) {
     return l.id === activeListId ? Object.assign({}, l, {
-      items: l.items.filter(function (i) {
-        return i.id !== itemId;
+      items: l.items.map(function (i) {
+        return i.id === itemId ? Object.assign({}, i, {
+          deleted: true,
+          updatedAt: Date.now()
+        }) : i;
       })
     }) : l;
   });
@@ -49,8 +52,11 @@ function deleteItemFromList(lists, activeListId, itemId) {
 function clearCheckedFromList(lists, activeListId) {
   return lists.map(function (l) {
     return l.id === activeListId ? Object.assign({}, l, {
-      items: l.items.filter(function (i) {
-        return !i.checked;
+      items: l.items.map(function (i) {
+        return i.checked ? Object.assign({}, i, {
+          deleted: true,
+          updatedAt: Date.now()
+        }) : i;
       })
     }) : l;
   });
@@ -69,8 +75,11 @@ function createList(lists, name) {
   };
 }
 function removeList(lists, listId) {
-  return lists.filter(function (l) {
-    return l.id !== listId;
+  return lists.map(function (l) {
+    return l.id === listId ? Object.assign({}, l, {
+      deleted: true,
+      updatedAt: Date.now()
+    }) : l;
   });
 }
 function renameList(lists, listId, name) {
