@@ -69,8 +69,9 @@ function ListonicApp() {
     }).then(r => r.json()).then(data => {
       const normalized = normalizeLists(data);
       if (normalized) {
-        setLists(normalized);
-        localStorage.setItem('listonicLists', JSON.stringify(normalized));
+        setLists(function (prev) {
+          return mergeLists(prev, normalized);
+        });
       }
       setSyncStatus('ok');
       isMounted.current = true;
@@ -384,16 +385,16 @@ function ListonicApp() {
   }, u))), /*#__PURE__*/React.createElement("button", {
     onClick: () => addItem(),
     className: "lt-add-btn"
-  }, "P\u0159idat"))), activeList.items.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "P\u0159idat"))), (unchecked.length > 0 || checked.length > 0) && /*#__PURE__*/React.createElement("div", {
     className: "lt-stats-bar"
   }, /*#__PURE__*/React.createElement("span", null, unchecked.length, " zb\xFDv\xE1"), /*#__PURE__*/React.createElement("div", {
     className: "lt-progress-bar lt-stats-progress"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lt-progress-fill",
     style: {
-      width: `${activeList.items.length > 0 ? checked.length / activeList.items.length * 100 : 0}%`
+      width: `${unchecked.length + checked.length > 0 ? checked.length / (unchecked.length + checked.length) * 100 : 0}%`
     }
-  })), /*#__PURE__*/React.createElement("span", null, checked.length, "/", activeList.items.length)), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", null, checked.length, "/", unchecked.length + checked.length)), /*#__PURE__*/React.createElement("div", {
     className: "lt-items"
   }, unchecked.map(item => /*#__PURE__*/React.createElement("div", {
     key: item.id,
@@ -431,7 +432,7 @@ function ListonicApp() {
   }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
     className: "lt-delete-btn",
     onClick: () => setLists(deleteItemFromList(lists, activeListId, item.id))
-  }, "\u2715")))), activeList.items.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, "\u2715")))), unchecked.length === 0 && checked.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "lt-empty-list"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lt-empty-icon"

@@ -60,8 +60,7 @@ function ListonicApp() {
       .then(data => {
         const normalized = normalizeLists(data);
         if (normalized) {
-          setLists(normalized);
-          localStorage.setItem('listonicLists', JSON.stringify(normalized));
+          setLists(function (prev) { return mergeLists(prev, normalized); });
         }
         setSyncStatus('ok');
         isMounted.current = true;
@@ -324,13 +323,13 @@ function ListonicApp() {
           </div>
         </div>
 
-        {activeList.items.length > 0 && (
+        {(unchecked.length > 0 || checked.length > 0) && (
           <div className="lt-stats-bar">
             <span>{unchecked.length} zbývá</span>
             <div className="lt-progress-bar lt-stats-progress">
-              <div className="lt-progress-fill" style={{ width: `${activeList.items.length > 0 ? (checked.length / activeList.items.length) * 100 : 0}%` }}></div>
+              <div className="lt-progress-fill" style={{ width: `${(unchecked.length + checked.length) > 0 ? (checked.length / (unchecked.length + checked.length)) * 100 : 0}%` }}></div>
             </div>
-            <span>{checked.length}/{activeList.items.length}</span>
+            <span>{checked.length}/{unchecked.length + checked.length}</span>
           </div>
         )}
 
@@ -372,7 +371,7 @@ function ListonicApp() {
             </>
           )}
 
-          {activeList.items.length === 0 && (
+          {unchecked.length === 0 && checked.length === 0 && (
             <div className="lt-empty-list">
               <div className="lt-empty-icon">🛒</div>
               <p className="lt-empty-title">Prázdný seznam</p>

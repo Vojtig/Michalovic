@@ -53,7 +53,7 @@ function clearCheckedFromList(lists, activeListId) {
   return lists.map(function (l) {
     return l.id === activeListId ? Object.assign({}, l, {
       items: l.items.map(function (i) {
-        return i.checked ? Object.assign({}, i, {
+        return i.checked && !i.deleted ? Object.assign({}, i, {
           deleted: true,
           updatedAt: Date.now()
         }) : i;
@@ -96,14 +96,20 @@ function addToHistory(history, name) {
 }
 function mergeLists(localLists, serverLists) {
   var allIds = {};
-  localLists.forEach(function (l) { allIds[l.id] = true; });
-  serverLists.forEach(function (l) { allIds[l.id] = true; });
-
+  localLists.forEach(function (l) {
+    allIds[l.id] = true;
+  });
+  serverLists.forEach(function (l) {
+    allIds[l.id] = true;
+  });
   return Object.keys(allIds).map(function (id) {
-    var local  = localLists.find(function (l) { return String(l.id) === id; });
-    var server = serverLists.find(function (l) { return String(l.id) === id; });
-
-    if (!local)  return server;
+    var local = localLists.find(function (l) {
+      return String(l.id) === id;
+    });
+    var server = serverLists.find(function (l) {
+      return String(l.id) === id;
+    });
+    if (!local) return server;
     if (!server) return local;
 
     // List metadata: higher updatedAt wins
@@ -111,21 +117,28 @@ function mergeLists(localLists, serverLists) {
 
     // Merge items
     var itemIds = {};
-    (local.items  || []).forEach(function (i) { itemIds[i.id] = true; });
-    (server.items || []).forEach(function (i) { itemIds[i.id] = true; });
-
+    (local.items || []).forEach(function (i) {
+      itemIds[i.id] = true;
+    });
+    (server.items || []).forEach(function (i) {
+      itemIds[i.id] = true;
+    });
     var mergedItems = Object.keys(itemIds).map(function (itemId) {
-      var li = (local.items  || []).find(function (i) { return String(i.id) === itemId; });
-      var si = (server.items || []).find(function (i) { return String(i.id) === itemId; });
+      var li = (local.items || []).find(function (i) {
+        return String(i.id) === itemId;
+      });
+      var si = (server.items || []).find(function (i) {
+        return String(i.id) === itemId;
+      });
       if (!li) return si;
       if (!si) return li;
       return (li.updatedAt || 0) >= (si.updatedAt || 0) ? li : si;
     });
-
-    return Object.assign({}, winnerMeta, { items: mergedItems });
+    return Object.assign({}, winnerMeta, {
+      items: mergedItems
+    });
   });
 }
-
 if (typeof module !== 'undefined') {
   module.exports = {
     getSuggestions: getSuggestions,
