@@ -89,7 +89,7 @@ function ListonicApp() {
     localStorage.setItem('listonicHistory', JSON.stringify(history));
   }, [history]);
 
-  const activeList = activeListId ? lists.find(l => l.id === activeListId) : null;
+  const activeList = activeListId ? lists.find(l => l.id === activeListId && !l.deleted) : null;
 
   const addItem = (name = null) => {
     const itemName = (name || itemInput).trim();
@@ -146,7 +146,7 @@ function ListonicApp() {
             </div>
           )}
 
-          {lists.length === 0 && !showAddList && (
+          {lists.filter(l => !l.deleted).length === 0 && !showAddList && (
             <div className="lt-empty-home">
               <div className="lt-empty-icon">🛒</div>
               <p className="lt-empty-title">Žádné seznamy</p>
@@ -156,7 +156,7 @@ function ListonicApp() {
           )}
 
           <div className="lt-lists-grid">
-            {lists.map(list => {
+            {lists.filter(l => !l.deleted).map(list => {
               const total = list.items.length;
               const done = list.items.filter(i => i.checked).length;
               const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -216,8 +216,8 @@ function ListonicApp() {
   }
 
   // --- LIST DETAIL SCREEN ---
-  const unchecked = activeList.items.filter(i => !i.checked);
-  const checked = activeList.items.filter(i => i.checked);
+  const unchecked = activeList.items.filter(i => !i.checked && !i.deleted);
+  const checked = activeList.items.filter(i => i.checked && !i.deleted);
 
   return (
     <div className="lt-app">
