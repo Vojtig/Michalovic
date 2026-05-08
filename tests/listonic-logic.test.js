@@ -13,8 +13,8 @@ const {
 } = require('../src/listonic-logic.js');
 
 // --- helpers ---
-const makeList = (id, name, items = []) => ({ id, name, items });
-const makeItem = (id, name, checked = false, qty = '', unit = '') => ({ id, name, qty, unit, checked });
+const makeList = (id, name, items = []) => ({ id, name, items, updatedAt: 0, deleted: false });
+const makeItem = (id, name, checked = false, qty = '', unit = '') => ({ id, name, qty, unit, checked, updatedAt: 0, deleted: false });
 
 // ===== getSuggestions =====
 describe('getSuggestions', () => {
@@ -87,6 +87,22 @@ describe('addItemToList', () => {
   });
 });
 
+// ===== addItemToList — timestamps =====
+describe('addItemToList — timestamps', () => {
+  const lists = [makeList(1, 'Nákup')];
+
+  test('nová položka má updatedAt jako číslo > 0', () => {
+    const result = addItemToList(lists, 1, 'mléko', '', '');
+    expect(typeof result[0].items[0].updatedAt).toBe('number');
+    expect(result[0].items[0].updatedAt).toBeGreaterThan(0);
+  });
+
+  test('nová položka má deleted: false', () => {
+    const result = addItemToList(lists, 1, 'mléko', '', '');
+    expect(result[0].items[0].deleted).toBe(false);
+  });
+});
+
 // ===== toggleItemInList =====
 describe('toggleItemInList', () => {
   const item = makeItem(10, 'mléko', false);
@@ -113,6 +129,16 @@ describe('toggleItemInList', () => {
     const multiList = [makeList(1, 'A', [makeItem(10, 'x')]), makeList(2, 'B', [makeItem(10, 'y')])];
     const result = toggleItemInList(multiList, 1, 10);
     expect(result[1].items[0].checked).toBe(false);
+  });
+});
+
+// ===== toggleItemInList — timestamps =====
+describe('toggleItemInList — timestamps', () => {
+  test('toggle aktualizuje updatedAt položky', () => {
+    const before = Date.now();
+    const lists = [makeList(1, 'N', [makeItem(10, 'a')])];
+    const result = toggleItemInList(lists, 1, 10);
+    expect(result[0].items[0].updatedAt).toBeGreaterThanOrEqual(before);
   });
 });
 
@@ -187,6 +213,20 @@ describe('createList', () => {
   });
 });
 
+// ===== createList — timestamps =====
+describe('createList — timestamps', () => {
+  test('nový seznam má updatedAt jako číslo > 0', () => {
+    const { newList } = createList([], 'Test');
+    expect(typeof newList.updatedAt).toBe('number');
+    expect(newList.updatedAt).toBeGreaterThan(0);
+  });
+
+  test('nový seznam má deleted: false', () => {
+    const { newList } = createList([], 'Test');
+    expect(newList.deleted).toBe(false);
+  });
+});
+
 // ===== removeList =====
 describe('removeList', () => {
   test('odstraní správný seznam', () => {
@@ -216,6 +256,16 @@ describe('renameList', () => {
     const lists = [makeList(1, 'A')];
     const result = renameList(lists, 1, '  Upravený  ');
     expect(result[0].name).toBe('Upravený');
+  });
+});
+
+// ===== renameList — timestamps =====
+describe('renameList — timestamps', () => {
+  test('přejmenování aktualizuje updatedAt seznamu', () => {
+    const before = Date.now();
+    const lists = [makeList(1, 'Starý')];
+    const result = renameList(lists, 1, 'Nový');
+    expect(result[0].updatedAt).toBeGreaterThanOrEqual(before);
   });
 });
 

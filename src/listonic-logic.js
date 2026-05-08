@@ -14,7 +14,9 @@ function addItemToList(lists, activeListId, name, qty, unit) {
     name: name.trim(),
     qty: (qty || '').trim(),
     unit: unit || '',
-    checked: false
+    checked: false,
+    updatedAt: Date.now(),
+    deleted: false
   };
   return lists.map(function (l) {
     return l.id === activeListId ? Object.assign({}, l, {
@@ -28,7 +30,8 @@ function toggleItemInList(lists, activeListId, itemId) {
     return Object.assign({}, l, {
       items: l.items.map(function (i) {
         return i.id === itemId ? Object.assign({}, i, {
-          checked: !i.checked
+          checked: !i.checked,
+          updatedAt: Date.now()
         }) : i;
       })
     });
@@ -56,7 +59,9 @@ function createList(lists, name) {
   var newList = {
     id: Date.now(),
     name: name.trim(),
-    items: []
+    items: [],
+    updatedAt: Date.now(),
+    deleted: false
   };
   return {
     lists: lists.concat([newList]),
@@ -71,7 +76,8 @@ function removeList(lists, listId) {
 function renameList(lists, listId, name) {
   return lists.map(function (l) {
     return l.id === listId ? Object.assign({}, l, {
-      name: name.trim()
+      name: name.trim(),
+      updatedAt: Date.now()
     }) : l;
   });
 }
