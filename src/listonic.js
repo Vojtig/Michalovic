@@ -58,6 +58,9 @@ function ListonicApp() {
   const [syncStatus, setSyncStatus] = useState('loading');
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
+  const isPollingUpdate = useRef(false);
+  const pollInterval = useRef(null);
+  const syncStatusRef = useRef(syncStatus);
   useEffect(() => {
     fetch(API_URL, {
       headers: {
@@ -78,6 +81,10 @@ function ListonicApp() {
   }, []);
   useEffect(() => {
     if (!isMounted.current) return;
+    if (isPollingUpdate.current) {
+      isPollingUpdate.current = false;
+      return;
+    }
     localStorage.setItem('listonicLists', JSON.stringify(lists));
     setSyncStatus('saving');
     clearTimeout(saveTimer.current);
@@ -95,6 +102,50 @@ function ListonicApp() {
   useEffect(() => {
     localStorage.setItem('listonicHistory', JSON.stringify(history));
   }, [history]);
+  useEffect(() => {
+    syncStatusRef.current = syncStatus;
+  }, [syncStatus]);
+  useEffect(() => {
+    var doPoll = function () {
+      if (syncStatusRef.current === 'saving') return;
+      fetch(API_URL, {
+        headers: {
+          'X-Token': API_TOKEN
+        }
+      }).then(function (r) {
+        return r.json();
+      }).then(function (data) {
+        var normalized = normalizeLists(data);
+        if (!normalized) return;
+        isPollingUpdate.current = true;
+        setLists(function (prev) {
+          return mergeLists(prev, normalized);
+        });
+      }).catch(function () {});
+    };
+    var startPolling = function () {
+      if (pollInterval.current) return;
+      pollInterval.current = setInterval(doPoll, 5000);
+    };
+    var stopPolling = function () {
+      clearInterval(pollInterval.current);
+      pollInterval.current = null;
+    };
+    var handleVisibility = function () {
+      if (document.visibilityState === 'visible') {
+        doPoll();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    if (document.visibilityState === 'visible') startPolling();
+    return function () {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      stopPolling();
+    };
+  }, []);
   const activeList = activeListId ? lists.find(l => l.id === activeListId && !l.deleted) : null;
   const addItem = (name = null) => {
     const itemName = (name || itemInput).trim();
