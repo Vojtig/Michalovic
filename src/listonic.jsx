@@ -5,11 +5,23 @@ const UNITS = ['ks', 'kg', 'dkg', 'g', 'l', 'dl', 'ml', 'bal'];
 const API_URL = 'api/lists.php';
 const API_TOKEN = 'mic-9kX4mW2pR7vL8j';
 
-const DEFAULT_LISTS = [{ id: 1, name: 'Nákup', items: [] }];
+const DEFAULT_LISTS = [{ id: 1, name: 'Nákup', items: [], updatedAt: 0, deleted: false }];
 
 const normalizeLists = (data) => {
   if (!Array.isArray(data) || data.length === 0) return null;
-  return data.map(list => ({ ...list, items: Array.isArray(list.items) ? list.items : [] }));
+  return data.map(list => ({
+    ...list,
+    items: Array.isArray(list.items) ? list.items : [],
+    updatedAt: list.updatedAt || 0,
+    deleted: list.deleted || false,
+  })).map(list => ({
+    ...list,
+    items: list.items.map(item => ({
+      ...item,
+      updatedAt: item.updatedAt || 0,
+      deleted: item.deleted || false,
+    }))
+  }));
 };
 
 function ListonicApp() {
