@@ -503,11 +503,25 @@ function RecipeForm({ recipe, onSave, onBack, onDelete }) {
       : ['']
   );
 
+  const [enteringIngIdx, setEnteringIngIdx] = useState(null);
+  const [leavingIngIdx, setLeavingIngIdx]   = useState(null);
+
   const updateIng = (i, field, val) => {
     setIngredients(prev => prev.map((ing, idx) => idx === i ? { ...ing, [field]: val } : ing));
   };
-  const addIng    = () => setIngredients(prev => [...prev, { name: '', qty: '', unit: '' }]);
-  const removeIng = i  => setIngredients(prev => prev.filter((_, idx) => idx !== i));
+  const addIng = () => {
+    const newIdx = ingredients.length;
+    setIngredients(prev => [...prev, { name: '', qty: '', unit: '' }]);
+    setEnteringIngIdx(newIdx);
+    setTimeout(() => setEnteringIngIdx(null), 220);
+  };
+  const removeIng = i => {
+    setLeavingIngIdx(i);
+    setTimeout(() => {
+      setIngredients(prev => prev.filter((_, idx) => idx !== i));
+      setLeavingIngIdx(null);
+    }, 180);
+  };
 
   const updateStep = (i, val) => setSteps(prev => prev.map((s, idx) => idx === i ? val : s));
   const addStep    = () => setSteps(prev => [...prev, '']);
@@ -630,7 +644,13 @@ function RecipeForm({ recipe, onSave, onBack, onDelete }) {
           <div className="rc-fcard">
             <div className="rc-fcard-title">Ingredience</div>
             {ingredients.map((ing, i) => (
-              <div key={i} className="rc-dyn-row">
+              <div
+                key={i}
+                className={['rc-dyn-row',
+                  i === enteringIngIdx ? 'anim-entering' : '',
+                  i === leavingIngIdx  ? 'anim-leaving'  : '',
+                ].filter(Boolean).join(' ')}
+              >
                 <input
                   className="rc-input"
                   placeholder="Název"
