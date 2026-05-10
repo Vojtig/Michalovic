@@ -36,9 +36,15 @@ function iconColor(id) {
 // ── RecipeList ──────────────────────────────────────────────────────────────
 const SYNC_ICONS = { loading: '⟳', saving: '↑', ok: '✓', offline: '⚡' };
 
-function RecipeList({ recipes, onSelect, onAdd, syncStatus }) {
+function RecipeList({ recipes, onSelect, onAdd, syncStatus, enteringRecipeId, leavingRecipeIds, onEnterComplete }) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Vše');
+
+  useEffect(() => {
+    if (enteringRecipeId == null) return;
+    const t = setTimeout(onEnterComplete, 220);
+    return () => clearTimeout(t);
+  }, [enteringRecipeId]);
 
   const categories = ['Vše', ...Array.from(new Set(recipes.map(r => r.category).filter(Boolean)))];
 
@@ -88,7 +94,14 @@ function RecipeList({ recipes, onSelect, onAdd, syncStatus }) {
         ) : (
           <div className="rc-grid">
             {filtered.map(r => (
-              <div key={r.id} className="rc-card" onClick={() => onSelect(r.id)}>
+              <div
+                key={r.id}
+                className={['rc-card',
+                  r.id === enteringRecipeId   ? 'anim-entering' : '',
+                  leavingRecipeIds.has(r.id)  ? 'anim-leaving'  : '',
+                ].filter(Boolean).join(' ')}
+                onClick={() => !leavingRecipeIds.has(r.id) && onSelect(r.id)}
+              >
                 <div className="rc-card-icon" style={{ background: iconColor(r.id) }}>
                   {r.emoji || '🍽️'}
                 </div>
@@ -694,6 +707,8 @@ function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [editId, setEditId] = useState(null);
   const [syncStatus, setSyncStatus] = useState('loading');
+  const [enteringRecipeId, setEnteringRecipeId] = useState(null);
+  const [leavingRecipeIds, setLeavingRecipeIds] = useState(new Set());
 
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
@@ -773,6 +788,7 @@ function App() {
       const n = { ...recipe, id: Date.now(), createdAt: Date.now() };
       updated = [...baseRecipes, n];
       newId = n.id;
+      setEnteringRecipeId(n.id);
     }
     setRecipes(updated);
     setSelectedId(newId);
@@ -780,8 +796,12 @@ function App() {
   };
 
   const deleteRecipe = id => {
-    setRecipes(recipes.filter(r => r.id !== id));
+    setLeavingRecipeIds(prev => new Set(prev).add(id));
     setView('list');
+    setTimeout(() => {
+      setRecipes(prev => prev.filter(r => r.id !== id));
+      setLeavingRecipeIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+    }, 180);
   };
 
   if (view === 'detail') return (
@@ -800,7 +820,17 @@ function App() {
       onDelete={deleteRecipe}
     />
   );
-  return <RecipeList recipes={recipes} onSelect={goDetail} onAdd={() => goForm(null)} syncStatus={syncStatus} />;
+  return (
+    <RecipeList
+      recipes={recipes}
+      onSelect={goDetail}
+      onAdd={() => goForm(null)}
+      syncStatus={syncStatus}
+      enteringRecipeId={enteringRecipeId}
+      leavingRecipeIds={leavingRecipeIds}
+      onEnterComplete={() => setEnteringRecipeId(null)}
+    />
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);

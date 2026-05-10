@@ -26,10 +26,18 @@ function RecipeList({
   recipes,
   onSelect,
   onAdd,
-  syncStatus
+  syncStatus,
+  enteringRecipeId,
+  leavingRecipeIds,
+  onEnterComplete
 }) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Vše');
+  useEffect(() => {
+    if (enteringRecipeId == null) return;
+    const t = setTimeout(onEnterComplete, 220);
+    return () => clearTimeout(t);
+  }, [enteringRecipeId]);
   const categories = ['Vše', ...Array.from(new Set(recipes.map(r => r.category).filter(Boolean)))];
   const filtered = recipes.filter(r => {
     const matchSearch = !search.trim() || r.title.toLowerCase().includes(search.toLowerCase());
@@ -77,8 +85,8 @@ function RecipeList({
     className: "rc-grid"
   }, filtered.map(r => /*#__PURE__*/React.createElement("div", {
     key: r.id,
-    className: "rc-card",
-    onClick: () => onSelect(r.id)
+    className: ['rc-card', r.id === enteringRecipeId ? 'anim-entering' : '', leavingRecipeIds.has(r.id) ? 'anim-leaving' : ''].filter(Boolean).join(' '),
+    onClick: () => !leavingRecipeIds.has(r.id) && onSelect(r.id)
   }, /*#__PURE__*/React.createElement("div", {
     className: "rc-card-icon",
     style: {
@@ -776,6 +784,8 @@ function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [editId, setEditId] = useState(null);
   const [syncStatus, setSyncStatus] = useState('loading');
+  const [enteringRecipeId, setEnteringRecipeId] = useState(null);
+  const [leavingRecipeIds, setLeavingRecipeIds] = useState(new Set());
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
   const skipNextSave = useRef(false);
@@ -885,14 +895,23 @@ function App() {
       };
       updated = [...baseRecipes, n];
       newId = n.id;
+      setEnteringRecipeId(n.id);
     }
     setRecipes(updated);
     setSelectedId(newId);
     setView('detail');
   };
   const deleteRecipe = id => {
-    setRecipes(recipes.filter(r => r.id !== id));
+    setLeavingRecipeIds(prev => new Set(prev).add(id));
     setView('list');
+    setTimeout(() => {
+      setRecipes(prev => prev.filter(r => r.id !== id));
+      setLeavingRecipeIds(prev => {
+        const s = new Set(prev);
+        s.delete(id);
+        return s;
+      });
+    }, 180);
   };
   if (view === 'detail') return /*#__PURE__*/React.createElement(RecipeDetail, {
     recipe: selectedRecipe,
@@ -910,7 +929,10 @@ function App() {
     recipes: recipes,
     onSelect: goDetail,
     onAdd: () => goForm(null),
-    syncStatus: syncStatus
+    syncStatus: syncStatus,
+    enteringRecipeId: enteringRecipeId,
+    leavingRecipeIds: leavingRecipeIds,
+    onEnterComplete: () => setEnteringRecipeId(null)
   });
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
