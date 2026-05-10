@@ -196,6 +196,18 @@ function ListonicApp() {
     }, 180);
   };
 
+  const handleToggleItem = (itemId) => {
+    setLeavingItemIds(prev => new Set(prev).add(itemId));
+    setTimeout(() => {
+      setLists(toggleItemInList(lists, activeListId, itemId));
+      setLeavingItemIds(prev => { const s = new Set(prev); s.delete(itemId); return s; });
+      setEnteringItemIds(prev => new Set(prev).add(itemId));
+      setTimeout(() => setEnteringItemIds(prev => {
+        const s = new Set(prev); s.delete(itemId); return s;
+      }), 220);
+    }, 180);
+  };
+
   // --- HOME SCREEN ---
   if (!activeList) {
     return (
@@ -374,7 +386,7 @@ function ListonicApp() {
               enteringItemIds.has(item.id) ? 'anim-entering' : '',
               leavingItemIds.has(item.id)  ? 'anim-leaving'  : '',
             ].filter(Boolean).join(' ')}>
-              <button className="lt-check-btn" onClick={() => setLists(toggleItemInList(lists, activeListId, item.id))}>
+              <button className="lt-check-btn" onClick={() => handleToggleItem(item.id)}>
                 <span className="lt-check-circle"></span>
               </button>
               <div className="lt-item-body">
@@ -397,7 +409,7 @@ function ListonicApp() {
                   enteringItemIds.has(item.id) ? 'anim-entering' : '',
                   leavingItemIds.has(item.id)  ? 'anim-leaving'  : '',
                 ].filter(Boolean).join(' ')}>
-                  <button className="lt-check-btn lt-check-done" onClick={() => setLists(toggleItemInList(lists, activeListId, item.id))}>
+                  <button className="lt-check-btn lt-check-done" onClick={() => handleToggleItem(item.id)}>
                     <span className="lt-check-circle">&#10003;</span>
                   </button>
                   <div className="lt-item-body">

@@ -223,6 +223,23 @@ function ListonicApp() {
       });
     }, 180);
   };
+  const handleToggleItem = itemId => {
+    setLeavingItemIds(prev => new Set(prev).add(itemId));
+    setTimeout(() => {
+      setLists(toggleItemInList(lists, activeListId, itemId));
+      setLeavingItemIds(prev => {
+        const s = new Set(prev);
+        s.delete(itemId);
+        return s;
+      });
+      setEnteringItemIds(prev => new Set(prev).add(itemId));
+      setTimeout(() => setEnteringItemIds(prev => {
+        const s = new Set(prev);
+        s.delete(itemId);
+        return s;
+      }), 220);
+    }, 180);
+  };
 
   // --- HOME SCREEN ---
   if (!activeList) {
@@ -429,7 +446,7 @@ function ListonicApp() {
     className: ['lt-item', enteringItemIds.has(item.id) ? 'anim-entering' : '', leavingItemIds.has(item.id) ? 'anim-leaving' : ''].filter(Boolean).join(' ')
   }, /*#__PURE__*/React.createElement("button", {
     className: "lt-check-btn",
-    onClick: () => setLists(toggleItemInList(lists, activeListId, item.id))
+    onClick: () => handleToggleItem(item.id)
   }, /*#__PURE__*/React.createElement("span", {
     className: "lt-check-circle"
   })), /*#__PURE__*/React.createElement("div", {
@@ -448,7 +465,7 @@ function ListonicApp() {
     className: ['lt-item lt-item-done', enteringItemIds.has(item.id) ? 'anim-entering' : '', leavingItemIds.has(item.id) ? 'anim-leaving' : ''].filter(Boolean).join(' ')
   }, /*#__PURE__*/React.createElement("button", {
     className: "lt-check-btn lt-check-done",
-    onClick: () => setLists(toggleItemInList(lists, activeListId, item.id))
+    onClick: () => handleToggleItem(item.id)
   }, /*#__PURE__*/React.createElement("span", {
     className: "lt-check-circle"
   }, "\u2713")), /*#__PURE__*/React.createElement("div", {
