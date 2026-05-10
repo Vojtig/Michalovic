@@ -1905,3 +1905,20 @@ body {
   color: #888;
   padding: 8px 12px 12px;
 }
+
+@keyframes anim-enter {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes anim-leave {
+  from { opacity: 1; transform: translateY(0);    max-height: 200px; }
+  to   { opacity: 0; transform: translateY(-8px); max-height: 0; }
+}
+.anim-entering {
+  animation: anim-enter 220ms ease-out forwards;
+}
+.anim-leaving {
+  animation: anim-leave 180ms ease-in forwards;
+  overflow: hidden;
+  pointer-events: none;
+}
