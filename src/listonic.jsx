@@ -47,6 +47,8 @@ function ListonicApp() {
   const [itemUnit, setItemUnit] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [syncStatus, setSyncStatus] = useState('loading');
+  const [enteringListIds, setEnteringListIds] = useState(new Set());
+  const [leavingListIds, setLeavingListIds] = useState(new Set());
 
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
@@ -156,6 +158,29 @@ function ListonicApp() {
   const syncLabel = { loading: '⏳ Načítám...', ok: '✓ Synchronizováno', saving: '↑ Ukládám...', offline: '⚠ Offline' };
   const syncColor = { loading: '#999', ok: '#43a047', saving: '#fb8c00', offline: '#e53935' };
 
+  const handleCreateList = () => {
+    if (!newListName.trim()) return;
+    const { lists: newLists, newList } = createList(lists, newListName);
+    setLists(newLists);
+    setNewListName('');
+    setShowAddList(false);
+    setActiveListId(newList.id);
+    setEnteringListIds(prev => new Set(prev).add(newList.id));
+    setTimeout(() => setEnteringListIds(prev => {
+      const s = new Set(prev); s.delete(newList.id); return s;
+    }), 220);
+  };
+
+  const handleDeleteList = (e, listId) => {
+    e.stopPropagation();
+    setLeavingListIds(prev => new Set(prev).add(listId));
+    setTimeout(() => {
+      setLists(removeList(lists, listId));
+      if (activeListId === listId) setActiveListId(null);
+      setLeavingListIds(prev => { const s = new Set(prev); s.delete(listId); return s; });
+    }, 180);
+  };
+
   // --- HOME SCREEN ---
   if (!activeList) {
     return (
@@ -176,23 +201,11 @@ function ListonicApp() {
                 placeholder="Název nového seznamu..."
                 value={newListName}
                 onChange={e => setNewListName(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && (() => {
-                  if (!newListName.trim()) return;
-                  const { lists: newLists, newList } = createList(lists, newListName);
-                  setLists(newLists);
-                  setNewListName(''); setShowAddList(false);
-                  setActiveListId(newList.id);
-                })()}
+                onKeyPress={e => e.key === 'Enter' && handleCreateList()}
                 className="lt-input"
               />
               <div className="lt-form-actions">
-                <button onClick={() => {
-                  if (!newListName.trim()) return;
-                  const { lists: newLists, newList } = createList(lists, newListName);
-                  setLists(newLists);
-                  setNewListName(''); setShowAddList(false);
-                  setActiveListId(newList.id);
-                }} className="lt-btn-primary">Vytvořit</button>
+                <button onClick={handleCreateList} className="lt-btn-primary">Vytvořit</button>
                 <button onClick={() => { setShowAddList(false); setNewListName(''); }} className="lt-btn-ghost">Zrušit</button>
               </div>
             </div>
@@ -215,7 +228,14 @@ function ListonicApp() {
               const pct = total > 0 ? Math.round((done / total) * 100) : 0;
               const remaining = total - done;
               return (
-                <div key={list.id} className="lt-list-card" onClick={() => setActiveListId(list.id)}>
+                <div
+                  key={list.id}
+                  className={['lt-list-card',
+                    enteringListIds.has(list.id) ? 'anim-entering' : '',
+                    leavingListIds.has(list.id)  ? 'anim-leaving'  : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => !leavingListIds.has(list.id) && setActiveListId(list.id)}
+                >
                   {editingListId === list.id ? (
                     <div className="lt-edit-list" onClick={e => e.stopPropagation()}>
                       <input
@@ -242,7 +262,7 @@ function ListonicApp() {
                         <span className="lt-list-icon">🛒</span>
                         <div className="lt-list-card-actions">
                           <button className="lt-icon-btn" onClick={e => { e.stopPropagation(); setEditingListId(list.id); setEditingListName(list.name); }}>✏️</button>
-                          <button className="lt-icon-btn" onClick={e => { e.stopPropagation(); setLists(removeList(lists, list.id)); if (activeListId === list.id) setActiveListId(null); }}>🗑️</button>
+                          <button className="lt-icon-btn" onClick={e => handleDeleteList(e, list.id)}>🗑️</button>
                         </div>
                       </div>
                       <div className="lt-list-card-name">{list.name}</div>

@@ -56,6 +56,8 @@ function ListonicApp() {
   const [itemUnit, setItemUnit] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [syncStatus, setSyncStatus] = useState('loading');
+  const [enteringListIds, setEnteringListIds] = useState(new Set());
+  const [leavingListIds, setLeavingListIds] = useState(new Set());
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
   const isPollingUpdate = useRef(false);
@@ -171,6 +173,36 @@ function ListonicApp() {
     saving: '#fb8c00',
     offline: '#e53935'
   };
+  const handleCreateList = () => {
+    if (!newListName.trim()) return;
+    const {
+      lists: newLists,
+      newList
+    } = createList(lists, newListName);
+    setLists(newLists);
+    setNewListName('');
+    setShowAddList(false);
+    setActiveListId(newList.id);
+    setEnteringListIds(prev => new Set(prev).add(newList.id));
+    setTimeout(() => setEnteringListIds(prev => {
+      const s = new Set(prev);
+      s.delete(newList.id);
+      return s;
+    }), 220);
+  };
+  const handleDeleteList = (e, listId) => {
+    e.stopPropagation();
+    setLeavingListIds(prev => new Set(prev).add(listId));
+    setTimeout(() => {
+      setLists(removeList(lists, listId));
+      if (activeListId === listId) setActiveListId(null);
+      setLeavingListIds(prev => {
+        const s = new Set(prev);
+        s.delete(listId);
+        return s;
+      });
+    }, 180);
+  };
 
   // --- HOME SCREEN ---
   if (!activeList) {
@@ -201,32 +233,12 @@ function ListonicApp() {
       placeholder: "N\xE1zev nov\xE9ho seznamu...",
       value: newListName,
       onChange: e => setNewListName(e.target.value),
-      onKeyPress: e => e.key === 'Enter' && (() => {
-        if (!newListName.trim()) return;
-        const {
-          lists: newLists,
-          newList
-        } = createList(lists, newListName);
-        setLists(newLists);
-        setNewListName('');
-        setShowAddList(false);
-        setActiveListId(newList.id);
-      })(),
+      onKeyPress: e => e.key === 'Enter' && handleCreateList(),
       className: "lt-input"
     }), /*#__PURE__*/React.createElement("div", {
       className: "lt-form-actions"
     }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => {
-        if (!newListName.trim()) return;
-        const {
-          lists: newLists,
-          newList
-        } = createList(lists, newListName);
-        setLists(newLists);
-        setNewListName('');
-        setShowAddList(false);
-        setActiveListId(newList.id);
-      },
+      onClick: handleCreateList,
       className: "lt-btn-primary"
     }, "Vytvo\u0159it"), /*#__PURE__*/React.createElement("button", {
       onClick: () => {
@@ -255,8 +267,8 @@ function ListonicApp() {
       const remaining = total - done;
       return /*#__PURE__*/React.createElement("div", {
         key: list.id,
-        className: "lt-list-card",
-        onClick: () => setActiveListId(list.id)
+        className: ['lt-list-card', enteringListIds.has(list.id) ? 'anim-entering' : '', leavingListIds.has(list.id) ? 'anim-leaving' : ''].filter(Boolean).join(' '),
+        onClick: () => !leavingListIds.has(list.id) && setActiveListId(list.id)
       }, editingListId === list.id ? /*#__PURE__*/React.createElement("div", {
         className: "lt-edit-list",
         onClick: e => e.stopPropagation()
@@ -295,11 +307,7 @@ function ListonicApp() {
         }
       }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("button", {
         className: "lt-icon-btn",
-        onClick: e => {
-          e.stopPropagation();
-          setLists(removeList(lists, list.id));
-          if (activeListId === list.id) setActiveListId(null);
-        }
+        onClick: e => handleDeleteList(e, list.id)
       }, "\uD83D\uDDD1\uFE0F"))), /*#__PURE__*/React.createElement("div", {
         className: "lt-list-card-name"
       }, list.name), /*#__PURE__*/React.createElement("div", {
