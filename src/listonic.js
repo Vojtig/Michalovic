@@ -58,6 +58,8 @@ function ListonicApp() {
   const [syncStatus, setSyncStatus] = useState('loading');
   const [enteringListIds, setEnteringListIds] = useState(new Set());
   const [leavingListIds, setLeavingListIds] = useState(new Set());
+  const [enteringItemIds, setEnteringItemIds] = useState(new Set());
+  const [leavingItemIds, setLeavingItemIds] = useState(new Set());
   const saveTimer = useRef(null);
   const isMounted = useRef(false);
   const isPollingUpdate = useRef(false);
@@ -153,12 +155,19 @@ function ListonicApp() {
   const addItem = (name = null) => {
     const itemName = (name || itemInput).trim();
     if (!itemName) return;
+    const newId = Date.now();
     setLists(addItemToList(lists, activeListId, itemName, itemQty, itemUnit));
     setHistory(addToHistory(history, itemName));
     setItemInput('');
     setItemQty('');
     setItemUnit('');
     setShowSuggestions(false);
+    setEnteringItemIds(prev => new Set(prev).add(newId));
+    setTimeout(() => setEnteringItemIds(prev => {
+      const s = new Set(prev);
+      s.delete(newId);
+      return s;
+    }), 220);
   };
   const suggestions = getSuggestions(history, itemInput);
   const syncLabel = {
@@ -199,6 +208,17 @@ function ListonicApp() {
       setLeavingListIds(prev => {
         const s = new Set(prev);
         s.delete(listId);
+        return s;
+      });
+    }, 180);
+  };
+  const handleDeleteItem = itemId => {
+    setLeavingItemIds(prev => new Set(prev).add(itemId));
+    setTimeout(() => {
+      setLists(deleteItemFromList(lists, activeListId, itemId));
+      setLeavingItemIds(prev => {
+        const s = new Set(prev);
+        s.delete(itemId);
         return s;
       });
     }, 180);
@@ -406,7 +426,7 @@ function ListonicApp() {
     className: "lt-items"
   }, unchecked.map(item => /*#__PURE__*/React.createElement("div", {
     key: item.id,
-    className: "lt-item"
+    className: ['lt-item', enteringItemIds.has(item.id) ? 'anim-entering' : '', leavingItemIds.has(item.id) ? 'anim-leaving' : ''].filter(Boolean).join(' ')
   }, /*#__PURE__*/React.createElement("button", {
     className: "lt-check-btn",
     onClick: () => setLists(toggleItemInList(lists, activeListId, item.id))
@@ -420,12 +440,12 @@ function ListonicApp() {
     className: "lt-item-qty"
   }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
     className: "lt-delete-btn",
-    onClick: () => setLists(deleteItemFromList(lists, activeListId, item.id))
+    onClick: () => handleDeleteItem(item.id)
   }, "\u2715"))), checked.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "lt-section-divider"
   }, /*#__PURE__*/React.createElement("span", null, "Nakoupeno (", checked.length, ")")), checked.map(item => /*#__PURE__*/React.createElement("div", {
     key: item.id,
-    className: "lt-item lt-item-done"
+    className: ['lt-item lt-item-done', enteringItemIds.has(item.id) ? 'anim-entering' : '', leavingItemIds.has(item.id) ? 'anim-leaving' : ''].filter(Boolean).join(' ')
   }, /*#__PURE__*/React.createElement("button", {
     className: "lt-check-btn lt-check-done",
     onClick: () => setLists(toggleItemInList(lists, activeListId, item.id))
@@ -439,7 +459,7 @@ function ListonicApp() {
     className: "lt-item-qty"
   }, item.qty, " ", item.unit)), /*#__PURE__*/React.createElement("button", {
     className: "lt-delete-btn",
-    onClick: () => setLists(deleteItemFromList(lists, activeListId, item.id))
+    onClick: () => handleDeleteItem(item.id)
   }, "\u2715")))), unchecked.length === 0 && checked.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "lt-empty-list"
   }, /*#__PURE__*/React.createElement("div", {
