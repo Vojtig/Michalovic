@@ -8,9 +8,9 @@ function getSuggestions(history, input) {
     return h.toLowerCase().includes(lower);
   }).slice(0, 6);
 }
-function addItemToList(lists, activeListId, name, qty, unit) {
+function addItemToList(lists, activeListId, name, qty, unit, id) {
   var newItem = {
-    id: Date.now(),
+    id: id !== undefined ? id : Date.now(),
     name: name.trim(),
     qty: (qty || '').trim(),
     unit: unit || '',

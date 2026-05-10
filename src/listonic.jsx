@@ -151,7 +151,7 @@ function ListonicApp() {
     const itemName = (name || itemInput).trim();
     if (!itemName) return;
     const newId = Date.now();
-    setLists(addItemToList(lists, activeListId, itemName, itemQty, itemUnit));
+    setLists(addItemToList(lists, activeListId, itemName, itemQty, itemUnit, newId));
     setHistory(addToHistory(history, itemName));
     setItemInput(''); setItemQty(''); setItemUnit(''); setShowSuggestions(false);
     setEnteringItemIds(prev => new Set(prev).add(newId));
